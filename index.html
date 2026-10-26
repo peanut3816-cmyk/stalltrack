@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>stalltrack</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="stalltrack">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f4f1eb">
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#f4f1eb; --card:#ffffff; --ink:#2a2721; --muted:#9a948a;
+    --chip:#ede9e1; --dark:#29261f; --track:#e5e1d8; --red:#c0392b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    max-width:430px; margin:0 auto;
+    padding:18px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  header{text-align:center; padding:8px 0 4px}
+  h1{font-family:Georgia,"Times New Roman",serif; font-weight:500; font-size:30px; margin:0; letter-spacing:.5px}
+  .tag{margin:2px 0 0; font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:lowercase}
+  .daterow{display:flex; align-items:center; justify-content:center; gap:12px; margin:18px 0 14px}
+  .daybtn{width:40px; height:40px; border:none; border-radius:12px; background:var(--card);
+    box-shadow:0 1px 3px rgba(42,39,33,.06); font-size:20px; color:var(--ink); cursor:pointer}
+  .datelabel{position:relative; font-size:17px; font-weight:700; min-width:150px; text-align:center; cursor:pointer}
+  .datelabel input{position:absolute; inset:0; opacity:0; width:100%; height:100%; border:none; cursor:pointer}
+  .sect{font-size:13px; color:var(--muted); margin:18px 2px 8px}
+  .card{background:var(--card); border-radius:16px; padding:13px 16px; margin-bottom:10px; box-shadow:0 1px 3px rgba(42,39,33,.05)}
+  .card label{display:block; font-size:13px; color:var(--muted); margin-bottom:4px}
+  .moneywrap{display:flex; align-items:baseline; gap:3px}
+  .moneywrap span{color:var(--muted); font-size:17px}
+  .card input{border:none; outline:none; background:transparent; width:100%;
+    font-size:19px; font-weight:600; color:var(--ink); font-family:inherit}
+  .card input::placeholder{color:#c9c3b8; font-weight:500}
+  .result{background:var(--dark); color:#fff; border-radius:18px; padding:20px 20px 14px; margin-top:16px}
+  .result p{margin:0; font-size:13px; color:#b9b4a9}
+  .net{font-size:36px; font-weight:700; margin:6px 0 14px; font-variant-numeric:tabular-nums}
+  .breakdown{border-top:1px solid rgba(255,255,255,.12)}
+  .brow{display:flex; justify-content:space-between; padding:9px 0; font-size:14px; color:#d8d3c8;
+    border-bottom:1px solid rgba(255,255,255,.08); font-variant-numeric:tabular-nums}
+  .brow:last-child{border-bottom:none}
+  #save{width:100%; border:none; background:var(--dark); color:#fff; border-radius:14px;
+    padding:15px; font-size:16px; font-weight:600; margin-top:14px; cursor:pointer; font-family:inherit}
+  #save:disabled{opacity:.35}
+  .hint{text-align:center; font-size:12px; color:var(--muted); margin:8px 0 0}
+  .hitem{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .hitem .hv{font-weight:600; font-size:15px}
+  .hitem .hd{font-size:13px; color:var(--muted); margin-top:2px}
+  .hnet{font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap}
+  .hdel{border:none; background:none; color:#c9c3b8; font-size:18px; padding:4px 2px 4px 8px; cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <h1>stalltrack</h1>
+  <p class="tag">cash-up</p>
+</header>
+
+<div class="daterow">
+  <button class="daybtn" id="dprev" aria-label="previous day">&#8249;</button>
+  <div class="datelabel"><span id="dlabel"></span><input type="date" id="dinput"></div>
+  <button class="daybtn" id="dnext" aria-label="next day">&#8250;</button>
+</div>
+
+<div class="card"><label>Venue</label>
+  <input id="venue" placeholder="Which market?" list="venues">
+  <datalist id="venues">
+    <option value="Market Central Taup&#333;"></option>
+    <option value="TLBM Zespri"></option>
+    <option value="Agrodome"></option>
+    <option value="Rotorua Night Market"></option>
+  </datalist>
+</div>
+
+<p class="sect">Before doors</p>
+<div class="card"><label>Float (cash you start with)</label>
+  <div class="moneywrap"><span>$</span><input id="float" inputmode="decimal" placeholder="0.00"></div></div>
+<div class="card"><label>Stall fee</label>
+  <div class="moneywrap"><span>$</span><input id="stallfee" inputmode="decimal" placeholder="0.00"></div></div>
+<div class="card"><label>Other expenses</label>
+  <div class="moneywrap"><span>$</span><input id="expenses" inputmode="decimal" placeholder="0.00"></div></div>
+
+<p class="sect">At pack-down</p>
+<div class="card"><label>Cash in the tin</label>
+  <div class="moneywrap"><span>$</span><input id="tin" inputmode="decimal" placeholder="0.00"></div></div>
+<div class="card"><label>EFTPOS total</label>
+  <div class="moneywrap"><span>$</span><input id="pos" inputmode="decimal" placeholder="0.00"></div></div>
+<div class="card"><label>EFTPOS fee %</label>
+  <div class="moneywrap"><input id="pct" inputmode="decimal" placeholder="2.5" style="font-size:19px"></div></div>
+
+<div class="result">
+  <p>Net for the day</p>
+  <div class="net" id="net">$0.00</div>
+  <div class="breakdown" id="breakdown"></div>
+</div>
+
+<button id="save" disabled>Save this cash-up</button>
+<p class="hint">saved on this phone only</p>
+
+<section id="histwrap" style="display:none">
+  <p class="sect">Recent markets</p>
+  <div id="hist"></div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+let d = new Date(); d.setHours(12,0,0,0);
+
+const iso = x => x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
+function paintDate(){
+  $("dlabel").textContent = d.toLocaleDateString("en-NZ",{weekday:"long", day:"numeric", month:"short"});
+  $("dinput").value = iso(d);
+}
+$("dprev").onclick = () => { d.setDate(d.getDate()-1); paintDate(); };
+$("dnext").onclick = () => { d.setDate(d.getDate()+1); paintDate(); };
+$("dinput").onchange = e => {
+  const p = e.target.value.split("-");
+  if (p.length === 3) d = new Date(+p[0], +p[1]-1, +p[2], 12);
+  paintDate();
+};
+paintDate();
+
+const num = id => parseFloat($(id).value) || 0;
+const fmt = n => {
+  const s = Math.abs(n).toLocaleString("en-NZ",{minimumFractionDigits:2, maximumFractionDigits:2});
+  return (n < 0 ? "-$" : "$") + s;
+};
+let last = {net:0};
+
+function compute(){
+  const fl = num("float"), sf = num("stallfee"), ex = num("expenses");
+  const tin = num("tin"), pos = num("pos"), pct = num("pct");
+  const cash = tin - fl;
+  const posNet = pos - (pos * pct / 100);
+  const net = cash + posNet - sf - ex;
+  last = {net, cash, posNet, sf, ex};
+  $("net").textContent = fmt(net);
+  $("net").style.color = net < 0 ? "#e8a79a" : "#fff";
+  let rows = "";
+  if (tin || fl) rows += row("Cash sales (tin minus float)", fmt(cash));
+  if (pos) rows += row("EFTPOS after fees", fmt(posNet));
+  if (sf) rows += row("Minus stall fee", "-" + fmt(sf).slice(1));
+  if (ex) rows += row("Minus other expenses", "-" + fmt(ex).slice(1));
+  $("breakdown").innerHTML = rows;
+  $("save").disabled = !(tin > 0 || pos > 0);
+}
+function row(label, val){ return '<div class="brow"><span>' + label + '</span><span>' + val + '</span></div>'; }
+document.querySelectorAll(".card input").forEach(i => i.addEventListener("input", compute));
+
+const KEY = "stalltrack.entries";
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; } };
+const saveAll = a => localStorage.setItem(KEY, JSON.stringify(a));
+
+$("save").onclick = () => {
+  const entries = load();
+  entries.unshift({
+    id: Date.now(), date: iso(d),
+    venue: $("venue").value.trim() || "Untitled venue",
+    net: last.net, cash: last.cash, posNet: last.posNet, sf: last.sf, ex: last.ex
+  });
+  saveAll(entries.slice(0,50));
+  const b = $("save"); b.textContent = "Saved \u2713"; b.disabled = true;
+  setTimeout(() => { b.textContent = "Save this cash-up"; compute(); }, 1200);
+  renderHist();
+};
+
+function renderHist(){
+  const entries = load();
+  $("histwrap").style.display = entries.length ? "block" : "none";
+  $("hist").innerHTML = entries.map(e =>
+    '<div class="card hitem"><div><div class="hv">' + esc(e.venue) + '</div><div class="hd">' +
+    fmtDate(e.date) + '</div></div><div style="display:flex;align-items:center;gap:2px">' +
+    '<span class="hnet">' + fmt(e.net) + '</span>' +
+    '<button class="hdel" data-id="' + e.id + '" aria-label="delete">&times;</button></div></div>'
+  ).join("");
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtDate = s => { const p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2], 12)
+  .toLocaleDateString("en-NZ",{weekday:"short", day:"numeric", month:"short"}); };
+$("hist").onclick = e => {
+  const btn = e.target.closest(".hdel"); if (!btn) return;
+  saveAll(load().filter(x => String(x.id) !== btn.dataset.id));
+  renderHist();
+};
+renderHist();
+</script>
+</body>
+</html>
