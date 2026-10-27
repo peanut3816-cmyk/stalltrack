@@ -25,7 +25,11 @@
   header{text-align:center; padding:8px 0 4px}
   h1{font-family:Georgia,"Times New Roman",serif; font-weight:500; font-size:30px; margin:0; letter-spacing:.5px}
   .tag{margin:2px 0 0; font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:lowercase}
-  .daterow{display:flex; align-items:center; justify-content:center; gap:12px; margin:18px 0 14px}
+  .tabs{display:flex; gap:6px; margin:14px 0 4px; background:var(--card); border-radius:14px; padding:5px; box-shadow:0 1px 3px rgba(42,39,33,.05)}
+  .tabs button{flex:1; border:none; background:transparent; border-radius:10px; padding:9px 0;
+    font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit}
+  .tabs button.on{background:var(--dark); color:#fff}
+  .daterow{display:flex; align-items:center; justify-content:center; gap:12px; margin:14px 0 10px}
   .daybtn{width:40px; height:40px; border:none; border-radius:12px; background:var(--card);
     box-shadow:0 1px 3px rgba(42,39,33,.06); font-size:20px; color:var(--ink); cursor:pointer}
   .datelabel{position:relative; font-size:17px; font-weight:700; min-width:150px; text-align:center; cursor:pointer}
@@ -54,85 +58,249 @@
   .hitem .hd{font-size:13px; color:var(--muted); margin-top:2px}
   .hnet{font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap}
   .hdel{border:none; background:none; color:#c9c3b8; font-size:18px; padding:4px 2px 4px 8px; cursor:pointer}
+  .prog{font-size:13px; color:var(--muted); margin:12px 2px 10px; display:flex; justify-content:space-between}
+  .ck{display:flex; align-items:center; gap:12px}
+  .ckbox{width:24px; height:24px; flex:0 0 24px; border-radius:8px; border:2px solid #d8d2c6;
+    background:transparent; cursor:pointer; padding:0; color:transparent; font-size:14px; line-height:1}
+  .ck.done .ckbox{background:var(--dark); border-color:var(--dark)}
+  .ck.done .cktext{color:var(--muted); text-decoration:line-through}
+  .cktext{flex:1; font-size:16px; font-weight:500}
+  .ckx{border:none; background:none; color:#c9c3b8; font-size:17px; padding:4px 2px 4px 8px; cursor:pointer}
+  .addrow{display:flex; gap:8px; margin-top:10px}
+  .addrow input{flex:1; border:none; outline:none; background:transparent;
+    font-size:16px; font-weight:500; color:var(--ink); font-family:inherit}
+  .seg{display:flex; gap:6px}
+  .seg button{flex:1; border:none; background:var(--chip); border-radius:10px; padding:8px 0;
+    font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit}
+  .seg button.on{background:var(--dark); color:#fff}
+  .sitem{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .sitem .sv{font-weight:600; font-size:15px}
+  .sitem .sd{font-size:13px; color:var(--muted); margin-top:2px}
+  .samt{font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap}
+  .empty{text-align:center; font-size:13px; color:var(--muted); padding:22px 0}
 </style>
 </head>
 <body>
 <header>
   <h1>stalltrack</h1>
-  <p class="tag">cash-up</p>
+  <p class="tag">checklist &middot; sales &middot; cash-up</p>
 </header>
 
-<div class="daterow">
+<div class="tabs" id="tabs">
+  <button data-v="ck" class="on">Checklist</button>
+  <button data-v="sales">Sales</button>
+  <button data-v="cash">Cash-up</button>
+</div>
+
+<div class="daterow" id="daterow" style="display:none">
   <button class="daybtn" id="dprev" aria-label="previous day">&#8249;</button>
   <div class="datelabel"><span id="dlabel"></span><input type="date" id="dinput"></div>
   <button class="daybtn" id="dnext" aria-label="next day">&#8250;</button>
 </div>
 
-<div class="card"><label>Venue</label>
-  <input id="venue" placeholder="Which market?" list="venues">
-  <datalist id="venues">
-    <option value="Market Central Taup&#333;"></option>
-    <option value="TLBM Zespri"></option>
-    <option value="Agrodome"></option>
-    <option value="Rotorua Night Market"></option>
-  </datalist>
-</div>
+<section id="v-ck">
+  <div class="prog"><span id="ckcount"></span><button class="hdel" id="ckreset" style="font-size:13px">reset checks</button></div>
+  <div id="cklist"></div>
+  <div class="card addrow">
+    <input id="cknew" placeholder="Add an item..." maxlength="40">
+    <button class="hdel" id="ckadd" style="font-size:20px; color:var(--ink)">&#43;</button>
+  </div>
+  <p class="hint">ticked items reset for the next market with the button above</p>
+</section>
 
-<p class="sect">Before doors</p>
-<div class="card"><label>Float (cash you start with)</label>
-  <div class="moneywrap"><span>$</span><input id="float" inputmode="decimal" placeholder="0.00"></div></div>
-<div class="card"><label>Stall fee</label>
-  <div class="moneywrap"><span>$</span><input id="stallfee" inputmode="decimal" placeholder="0.00"></div></div>
-<div class="card"><label>Other expenses</label>
-  <div class="moneywrap"><span>$</span><input id="expenses" inputmode="decimal" placeholder="0.00"></div></div>
+<section id="v-sales" style="display:none">
+  <div class="card">
+    <label>What sold</label>
+    <input id="sitemname" placeholder="Item name" maxlength="40">
+  </div>
+  <div style="display:flex; gap:10px">
+    <div class="card" style="flex:1"><label>Qty</label>
+      <input id="sqty" inputmode="decimal" placeholder="1"></div>
+    <div class="card" style="flex:2"><label>Price each</label>
+      <div class="moneywrap"><span>$</span><input id="sprice" inputmode="decimal" placeholder="0.00"></div></div>
+  </div>
+  <div class="card"><label>Paid by</label>
+    <div class="seg" id="sseg">
+      <button data-m="cash" class="on">Cash</button>
+      <button data-m="eftpos">EFTPOS</button>
+    </div>
+  </div>
+  <button id="sadd">Log the sale</button>
 
-<p class="sect">At pack-down</p>
-<div class="card"><label>Cash in the tin</label>
-  <div class="moneywrap"><span>$</span><input id="tin" inputmode="decimal" placeholder="0.00"></div></div>
-<div class="card"><label>EFTPOS total</label>
-  <div class="moneywrap"><span>$</span><input id="pos" inputmode="decimal" placeholder="0.00"></div></div>
-<div class="card"><label>EFTPOS fee %</label>
-  <div class="moneywrap"><input id="pct" inputmode="decimal" placeholder="2.5" style="font-size:19px"></div></div>
+  <div class="result">
+    <p>Takings on this day</p>
+    <div class="net" id="stotal">$0.00</div>
+    <div class="breakdown" id="sbreak"></div>
+  </div>
 
-<div class="result">
-  <p>Net for the day</p>
-  <div class="net" id="net">$0.00</div>
-  <div class="breakdown" id="breakdown"></div>
-</div>
+  <section id="slistwrap" style="display:none">
+    <p class="sect">Logged sales</p>
+    <div id="slist"></div>
+  </section>
+</section>
 
-<button id="save" disabled>Save this cash-up</button>
-<p class="hint">saved on this phone only</p>
+<section id="v-cash" style="display:none">
+  <div class="card"><label>Venue</label>
+    <input id="venue" placeholder="Which market?" list="venues">
+    <datalist id="venues">
+      <option value="Market Central Taup&#333;"></option>
+      <option value="TLBM Zespri"></option>
+      <option value="Agrodome"></option>
+      <option value="Rotorua Night Market"></option>
+    </datalist>
+  </div>
 
-<section id="histwrap" style="display:none">
-  <p class="sect">Recent markets</p>
-  <div id="hist"></div>
+  <p class="sect">Before doors</p>
+  <div class="card"><label>Float (cash you start with)</label>
+    <div class="moneywrap"><span>$</span><input id="float" inputmode="decimal" placeholder="0.00"></div></div>
+  <div class="card"><label>Stall fee</label>
+    <div class="moneywrap"><span>$</span><input id="stallfee" inputmode="decimal" placeholder="0.00"></div></div>
+  <div class="card"><label>Other expenses</label>
+    <div class="moneywrap"><span>$</span><input id="expenses" inputmode="decimal" placeholder="0.00"></div></div>
+
+  <p class="sect">At pack-down</p>
+  <div class="card"><label>Cash in the tin</label>
+    <div class="moneywrap"><span>$</span><input id="tin" inputmode="decimal" placeholder="0.00"></div></div>
+  <div class="card"><label>EFTPOS total</label>
+    <div class="moneywrap"><span>$</span><input id="pos" inputmode="decimal" placeholder="0.00"></div></div>
+  <div class="card"><label>EFTPOS fee %</label>
+    <div class="moneywrap"><input id="pct" inputmode="decimal" placeholder="2.5" style="font-size:19px"></div></div>
+
+  <div class="result">
+    <p>Net for the day</p>
+    <div class="net" id="net">$0.00</div>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+  <button id="save" disabled>Save this cash-up</button>
+  <p class="hint">saved on this phone only</p>
+
+  <section id="histwrap" style="display:none">
+    <p class="sect">Recent markets</p>
+    <div id="hist"></div>
+  </section>
 </section>
 
 <script>
 const $ = id => document.getElementById(id);
-let d = new Date(); d.setHours(12,0,0,0);
-
-const iso = x => x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
-function paintDate(){
-  $("dlabel").textContent = d.toLocaleDateString("en-NZ",{weekday:"long", day:"numeric", month:"short"});
-  $("dinput").value = iso(d);
-}
-$("dprev").onclick = () => { d.setDate(d.getDate()-1); paintDate(); };
-$("dnext").onclick = () => { d.setDate(d.getDate()+1); paintDate(); };
-$("dinput").onchange = e => {
-  const p = e.target.value.split("-");
-  if (p.length === 3) d = new Date(+p[0], +p[1]-1, +p[2], 12);
-  paintDate();
-};
-paintDate();
-
-const num = id => parseFloat($(id).value) || 0;
 const fmt = n => {
   const s = Math.abs(n).toLocaleString("en-NZ",{minimumFractionDigits:2, maximumFractionDigits:2});
   return (n < 0 ? "-$" : "$") + s;
 };
-let last = {net:0};
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDate = s => { const p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2], 12)
+  .toLocaleDateString("en-NZ",{weekday:"short", day:"numeric", month:"short"}); };
+const iso = x => x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
+let d = new Date(); d.setHours(12,0,0,0);
+function paintDate(){
+  $("dlabel").textContent = d.toLocaleDateString("en-NZ",{weekday:"long", day:"numeric", month:"short"});
+  $("dinput").value = iso(d);
+}
+$("dprev").onclick = () => { d.setDate(d.getDate()-1); paintDate(); renderSales(); };
+$("dnext").onclick = () => { d.setDate(d.getDate()+1); paintDate(); renderSales(); };
+$("dinput").onchange = e => {
+  const p = e.target.value.split("-");
+  if (p.length === 3) d = new Date(+p[0], +p[1]-1, +p[2], 12);
+  paintDate(); renderSales();
+};
 
+let view = "ck";
+$("tabs").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  view = b.dataset.v;
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  $("v-ck").style.display      = view === "ck"    ? "block" : "none";
+  $("v-sales").style.display   = view === "sales" ? "block" : "none";
+  $("v-cash").style.display    = view === "cash"  ? "block" : "none";
+  $("daterow").style.display   = view === "ck"    ? "none"  : "flex";
+  if (view === "sales") renderSales();
+};
+
+const DEFAULTS = [
+  "Table + tablecloth","Gazebo + weights","Display stands","Signage + pricing",
+  "EFTPOS machine charged","Float counted","Stock counted + packed","Bags + packaging",
+  "Apron + cash box","Tape, scissors, pens","Care cards / signage cards",
+  "Water + snacks","Chair","Sunscreen + hat"
+];
+const CKKEY = "stalltrack.checklist";
+let ck;
+try { ck = JSON.parse(localStorage.getItem(CKKEY)); } catch(e) { ck = null; }
+if (!Array.isArray(ck) || !ck.length) ck = DEFAULTS.map(t => ({id: Date.now()+Math.random(), t, done:false}));
+const saveCk = () => localStorage.setItem(CKKEY, JSON.stringify(ck));
+function renderCk(){
+  const done = ck.filter(i => i.done).length;
+  $("ckcount").textContent = done + " of " + ck.length + " packed";
+  $("cklist").innerHTML = ck.map(i =>
+    '<div class="card ck' + (i.done ? " done" : "") + '">' +
+    '<button class="ckbox" data-id="' + i.id + '" aria-label="toggle">&#10003;</button>' +
+    '<span class="cktext">' + esc(i.t) + '</span>' +
+    '<button class="ckx" data-x="' + i.id + '" aria-label="remove">&times;</button></div>'
+  ).join("");
+}
+$("cklist").onclick = e => {
+  const box = e.target.closest(".ckbox");
+  if (box){ const it = ck.find(i => String(i.id) === box.dataset.id); it.done = !it.done; saveCk(); renderCk(); return; }
+  const x = e.target.closest(".ckx");
+  if (x){ ck = ck.filter(i => String(i.id) !== x.dataset.x); saveCk(); renderCk(); }
+};
+function addCkItem(){
+  const t = $("cknew").value.trim(); if (!t) return;
+  ck.push({id: Date.now()+Math.random(), t, done:false});
+  $("cknew").value = ""; saveCk(); renderCk();
+}
+$("ckadd").onclick = addCkItem;
+$("cknew").addEventListener("keydown", e => { if (e.key === "Enter") addCkItem(); });
+$("ckreset").onclick = () => { ck.forEach(i => i.done = false); saveCk(); renderCk(); };
+renderCk();
+
+const SKEY = "stalltrack.sales";
+const loadS = () => { try { return JSON.parse(localStorage.getItem(SKEY)) || []; } catch(e) { return []; } };
+const saveS = a => localStorage.setItem(SKEY, JSON.stringify(a.slice(0,400)));
+let smethod = "cash";
+$("sseg").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  smethod = b.dataset.m;
+  document.querySelectorAll("#sseg button").forEach(x => x.classList.toggle("on", x === b));
+};
+$("sadd").onclick = () => {
+  const name = $("sitemname").value.trim();
+  const qty = parseFloat($("sqty").value) || 1;
+  const price = parseFloat($("sprice").value) || 0;
+  if (!name || price <= 0) return;
+  const a = loadS();
+  a.unshift({id: Date.now(), date: iso(d), name, qty, price, method: smethod});
+  saveS(a);
+  $("sitemname").value = ""; $("sqty").value = ""; $("sprice").value = "";
+  renderSales();
+};
+function renderSales(){
+  const a = loadS().filter(x => x.date === iso(d));
+  const cash = a.filter(x => x.method === "cash").reduce((t,x) => t + x.qty * x.price, 0);
+  const eft  = a.filter(x => x.method === "eftpos").reduce((t,x) => t + x.qty * x.price, 0);
+  const tot  = cash + eft;
+  $("stotal").textContent = fmt(tot);
+  let rows = "";
+  if (tot) rows += row("Cash takings", fmt(cash));
+  if (tot) rows += row("EFTPOS takings", fmt(eft));
+  $("sbreak").innerHTML = rows;
+  $("slistwrap").style.display = a.length ? "block" : "none";
+  $("slist").innerHTML = a.map(x =>
+    '<div class="card sitem"><div><div class="sv">' + esc(x.name) + '</div>' +
+    '<div class="sd">' + x.qty + " &times; " + fmt(x.price).slice(1) + " &middot; " + x.method + '</div></div>' +
+    '<div style="display:flex;align-items:center;gap:2px"><span class="samt">' + fmt(x.qty * x.price) + '</span>' +
+    '<button class="hdel" data-id="' + x.id + '" aria-label="delete">&times;</button></div></div>'
+  ).join("");
+}
+function row(label, val){ return '<div class="brow"><span>' + label + '</span><span>' + val + '</span></div>'; }
+$("slist").onclick = e => {
+  const btn = e.target.closest(".hdel"); if (!btn) return;
+  saveS(loadS().filter(x => String(x.id) !== btn.dataset.id));
+  renderSales();
+};
+paintDate();
+
+const num = id => parseFloat($(id).value) || 0;
+let last = {net:0};
 function compute(){
   const fl = num("float"), sf = num("stallfee"), ex = num("expenses");
   const tin = num("tin"), pos = num("pos"), pct = num("pct");
@@ -150,8 +318,7 @@ function compute(){
   $("breakdown").innerHTML = rows;
   $("save").disabled = !(tin > 0 || pos > 0);
 }
-function row(label, val){ return '<div class="brow"><span>' + label + '</span><span>' + val + '</span></div>'; }
-document.querySelectorAll(".card input").forEach(i => i.addEventListener("input", compute));
+document.querySelectorAll("#v-cash .card input").forEach(i => i.addEventListener("input", compute));
 
 const KEY = "stalltrack.entries";
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; } };
@@ -169,7 +336,6 @@ $("save").onclick = () => {
   setTimeout(() => { b.textContent = "Save this cash-up"; compute(); }, 1200);
   renderHist();
 };
-
 function renderHist(){
   const entries = load();
   $("histwrap").style.display = entries.length ? "block" : "none";
@@ -180,9 +346,6 @@ function renderHist(){
     '<button class="hdel" data-id="' + e.id + '" aria-label="delete">&times;</button></div></div>'
   ).join("");
 }
-const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const fmtDate = s => { const p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2], 12)
-  .toLocaleDateString("en-NZ",{weekday:"short", day:"numeric", month:"short"}); };
 $("hist").onclick = e => {
   const btn = e.target.closest(".hdel"); if (!btn) return;
   saveAll(load().filter(x => String(x.id) !== btn.dataset.id));
