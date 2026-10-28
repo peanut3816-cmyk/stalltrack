@@ -4,356 +4,1129 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>stalltrack</title>
+<meta name="description" content="Free pre-market checklist, sales log and cash-up for market stallholders. From oat.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="stalltrack">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f4f1eb">
-<link rel="icon" href="data:,">
+<meta name="theme-color" content="#F6F4F1">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="fonts/quicksand-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root{
-    --bg:#f4f1eb; --card:#ffffff; --ink:#2a2721; --muted:#9a948a;
-    --chip:#ede9e1; --dark:#29261f; --track:#e5e1d8; --red:#c0392b;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-  html,body{margin:0; padding:0}
-  body{
-    background:var(--bg); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    max-width:430px; margin:0 auto;
-    padding:18px 16px calc(28px + env(safe-area-inset-bottom));
-  }
-  header{text-align:center; padding:8px 0 4px}
-  h1{font-family:Georgia,"Times New Roman",serif; font-weight:500; font-size:30px; margin:0; letter-spacing:.5px}
-  .tag{margin:2px 0 0; font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:lowercase}
-  .tabs{display:flex; gap:6px; margin:14px 0 4px; background:var(--card); border-radius:14px; padding:5px; box-shadow:0 1px 3px rgba(42,39,33,.05)}
-  .tabs button{flex:1; border:none; background:transparent; border-radius:10px; padding:9px 0;
-    font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit}
-  .tabs button.on{background:var(--dark); color:#fff}
-  .daterow{display:flex; align-items:center; justify-content:center; gap:12px; margin:14px 0 10px}
-  .daybtn{width:40px; height:40px; border:none; border-radius:12px; background:var(--card);
-    box-shadow:0 1px 3px rgba(42,39,33,.06); font-size:20px; color:var(--ink); cursor:pointer}
-  .datelabel{position:relative; font-size:17px; font-weight:700; min-width:150px; text-align:center; cursor:pointer}
-  .datelabel input{position:absolute; inset:0; opacity:0; width:100%; height:100%; border:none; cursor:pointer}
-  .sect{font-size:13px; color:var(--muted); margin:18px 2px 8px}
-  .card{background:var(--card); border-radius:16px; padding:13px 16px; margin-bottom:10px; box-shadow:0 1px 3px rgba(42,39,33,.05)}
-  .card label{display:block; font-size:13px; color:var(--muted); margin-bottom:4px}
-  .moneywrap{display:flex; align-items:baseline; gap:3px}
-  .moneywrap span{color:var(--muted); font-size:17px}
-  .card input{border:none; outline:none; background:transparent; width:100%;
-    font-size:19px; font-weight:600; color:var(--ink); font-family:inherit}
-  .card input::placeholder{color:#c9c3b8; font-weight:500}
-  .result{background:var(--dark); color:#fff; border-radius:18px; padding:20px 20px 14px; margin-top:16px}
-  .result p{margin:0; font-size:13px; color:#b9b4a9}
-  .net{font-size:36px; font-weight:700; margin:6px 0 14px; font-variant-numeric:tabular-nums}
-  .breakdown{border-top:1px solid rgba(255,255,255,.12)}
-  .brow{display:flex; justify-content:space-between; padding:9px 0; font-size:14px; color:#d8d3c8;
-    border-bottom:1px solid rgba(255,255,255,.08); font-variant-numeric:tabular-nums}
-  .brow:last-child{border-bottom:none}
-  #save{width:100%; border:none; background:var(--dark); color:#fff; border-radius:14px;
-    padding:15px; font-size:16px; font-weight:600; margin-top:14px; cursor:pointer; font-family:inherit}
-  #save:disabled{opacity:.35}
-  .hint{text-align:center; font-size:12px; color:var(--muted); margin:8px 0 0}
-  .hitem{display:flex; align-items:center; justify-content:space-between; gap:10px}
-  .hitem .hv{font-weight:600; font-size:15px}
-  .hitem .hd{font-size:13px; color:var(--muted); margin-top:2px}
-  .hnet{font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap}
-  .hdel{border:none; background:none; color:#c9c3b8; font-size:18px; padding:4px 2px 4px 8px; cursor:pointer}
-  .prog{font-size:13px; color:var(--muted); margin:12px 2px 10px; display:flex; justify-content:space-between}
-  .ck{display:flex; align-items:center; gap:12px}
-  .ckbox{width:24px; height:24px; flex:0 0 24px; border-radius:8px; border:2px solid #d8d2c6;
-    background:transparent; cursor:pointer; padding:0; color:transparent; font-size:14px; line-height:1}
-  .ck.done .ckbox{background:var(--dark); border-color:var(--dark)}
-  .ck.done .cktext{color:var(--muted); text-decoration:line-through}
-  .cktext{flex:1; font-size:16px; font-weight:500}
-  .ckx{border:none; background:none; color:#c9c3b8; font-size:17px; padding:4px 2px 4px 8px; cursor:pointer}
-  .addrow{display:flex; gap:8px; margin-top:10px}
-  .addrow input{flex:1; border:none; outline:none; background:transparent;
-    font-size:16px; font-weight:500; color:var(--ink); font-family:inherit}
-  .seg{display:flex; gap:6px}
-  .seg button{flex:1; border:none; background:var(--chip); border-radius:10px; padding:8px 0;
-    font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit}
-  .seg button.on{background:var(--dark); color:#fff}
-  .sitem{display:flex; align-items:center; justify-content:space-between; gap:10px}
-  .sitem .sv{font-weight:600; font-size:15px}
-  .sitem .sd{font-size:13px; color:var(--muted); margin-top:2px}
-  .samt{font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; white-space:nowrap}
-  .empty{text-align:center; font-size:13px; color:var(--muted); padding:22px 0}
-  #sadd{width:100%; border:none; background:var(--dark); color:#fff; border-radius:14px;
-    padding:15px; font-size:16px; font-weight:600; cursor:pointer; font-family:inherit}
+@font-face{font-family:"Quicksand";font-weight:500;font-style:normal;font-display:swap;src:url("fonts/quicksand-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Quicksand";font-weight:600;font-style:normal;font-display:swap;src:url("fonts/quicksand-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Quicksand";font-weight:700;font-style:normal;font-display:swap;src:url("fonts/quicksand-latin-700-normal.woff2") format("woff2")}
+
+@font-face{font-family:"Figtree";font-weight:400;font-style:normal;font-display:swap;src:url("fonts/figtree-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Figtree";font-weight:500;font-style:normal;font-display:swap;src:url("fonts/figtree-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-style:normal;font-display:swap;src:url("fonts/figtree-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Figtree";font-weight:700;font-style:normal;font-display:swap;src:url("fonts/figtree-latin-700-normal.woff2") format("woff2")}
+
+:root{
+  --page:#F6F4F1; --card:#FFFFFF; --border:#E3DED8; --ink:#1E1C1A;
+  --muted:#6B6560; --faint:#9D968E; --btn:#2B2B2B; --chip:#ECEBE8; --chip-ink:#4A4744;
+  --check:#D8D2CA; --delete:#B91C1C; --red:#DC2626;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--page)}
+body{
+  color:var(--ink);font-family:"Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  font-weight:400;font-size:16px;line-height:1.35;
+  max-width:430px;margin:0 auto;min-height:100vh;
+  padding:calc(14px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom));
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+
+/* logo */
+/* Quicksand is used only for the brand: splash, oat wordmark and the header name */
+.wm,#splash,.top .name{font-family:"Quicksand",system-ui,sans-serif}
+.wm{display:inline-flex;align-items:baseline;line-height:1;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.wm svg{margin-left:.1em;transform:translateY(.08em);flex:none}
+
+/* splash */
+#splash{
+  position:fixed;inset:0;z-index:50;background:var(--page);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  text-align:center;transition:opacity .25s ease;cursor:pointer;
+}
+#splash.out{opacity:0;pointer-events:none}
+#splash .hero{font-size:44px;font-weight:700;letter-spacing:-.02em}
+#splash .tagline{color:var(--muted);font-size:13px;letter-spacing:1.5px}
+#splash .from{position:absolute;bottom:calc(36px + env(safe-area-inset-bottom));display:flex;align-items:baseline;gap:6px;color:var(--muted);font-size:12px}
+@media (prefers-reduced-motion:reduce){#splash{transition:none}}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 2px 14px}
+.top .name{font-size:14px;font-weight:600;color:var(--muted);letter-spacing:.01em}
+
+/* cards */
+.card{background:var(--card);border:.5px solid var(--border);border-radius:16px;padding:12px 16px;margin-bottom:10px}
+.lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:2px;font-weight:600}
+.field{width:100%;border:none;outline:none;background:transparent;padding:2px 0;font-size:16px;font-weight:500}
+.field::placeholder{color:var(--faint);font-weight:400}
+textarea.field{resize:none;min-height:44px;font-weight:400}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.split{border-top:1px solid var(--border);margin-top:10px;padding-top:10px}
+.datebox{position:relative;min-height:26px;display:flex;align-items:center}
+.datebox span{font-size:16px;font-weight:500}
+.datebox span.empty{color:var(--faint);font-weight:400}
+.datebox input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;cursor:pointer}
+
+/* progress + section rows */
+.prog{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 6px;color:var(--muted);font-size:13px;font-weight:600}
+.link{border:none;background:none;color:var(--muted);font-size:13px;font-weight:600;padding:8px 4px;text-decoration:underline;text-underline-offset:3px}
+.bar{height:4px;background:var(--border);border-radius:2px;margin:0 2px 14px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--btn);border-radius:2px;transition:width .2s ease}
+.sec{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;font-weight:600;margin:14px 2px 6px}
+.chip{background:var(--chip);color:var(--chip-ink);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600}
+
+/* items */
+.list{padding:0 16px}
+.item{display:flex;align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--border)}
+.item:last-child{border-bottom:none}
+.box{
+  width:26px;height:26px;flex:0 0 26px;border-radius:8px;border:2px solid var(--check);
+  background:transparent;padding:0;display:inline-flex;align-items:center;justify-content:center;color:#fff;
+}
+.box svg{display:none}
+.packed .box{background:var(--btn);border-color:var(--btn)}
+.packed .box svg{display:block}
+.hit{flex:1;display:flex;align-items:center;gap:10px;min-height:52px;border:none;background:none;text-align:left;padding:0;font-size:16px;font-weight:500}
+.packed .txt{color:var(--faint);text-decoration:line-through}
+.x{border:none;background:none;color:var(--faint);font-size:22px;line-height:1;width:44px;height:44px;margin-right:-10px}
+.x:active{color:var(--delete)}
+.done-msg{text-align:center;color:var(--muted);font-weight:600;padding:18px 0}
+
+/* collapsible packed */
+.fold{width:100%;display:flex;justify-content:space-between;align-items:center;border:.5px solid var(--border);background:var(--card);border-radius:16px;padding:14px 16px;font-size:14px;font-weight:600;color:var(--muted)}
+.fold .car{transition:transform .15s ease}
+.fold[aria-expanded="true"] .car{transform:rotate(90deg)}
+
+/* empty + add */
+.empty-card{text-align:center;padding:22px 16px}
+.empty-card b{display:block;font-size:17px;margin-bottom:4px}
+.empty-card span{color:var(--muted);font-size:14px}
+.add{display:flex;align-items:center;gap:8px}
+.add .field{flex:1}
+.addbtn{width:44px;height:44px;border:none;border-radius:12px;background:var(--btn);color:#fff;font-size:24px;line-height:1;flex:none}
+.addbtn:disabled{opacity:.35}
+.groupfield{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+
+/* placeholder tabs */
+.soon{text-align:center;color:var(--muted);padding:60px 16px}
+.soon b{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+
+/* header gear */
+.right{display:flex;align-items:center;gap:2px}
+.gear{border:none;background:none;width:44px;height:44px;margin-right:-12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;font-weight:600}
+.gear svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* sales */
+.seg{display:flex;gap:4px;background:var(--chip);border-radius:12px;padding:3px;margin-bottom:8px}
+.seg button{flex:1;border:none;background:transparent;border-radius:9px;min-height:40px;font-size:14px;font-weight:600;color:var(--chip-ink)}
+.seg button.on{background:var(--btn);color:#fff}
+.total{background:var(--btn);color:#fff;border-radius:14px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.total b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.total span{font-size:12px;color:#C9C3BA;font-weight:600;text-align:right}
+.dot{color:var(--red)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.tile{position:relative;background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px 8px 12px;min-height:80px;text-align:center;font-weight:700;font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tile small{font-size:13px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile .tg{position:absolute;top:6px;right:10px;font-size:10px;font-weight:600;color:var(--faint)}
+.tile.quiet{min-height:56px;color:var(--muted);font-weight:600;font-size:14px;padding:10px 8px}
+.tile:active{background:var(--chip)}
+.locked .tile,.locked .srow{opacity:.45;pointer-events:none}
+.srow{display:flex;align-items:center;gap:8px;min-height:52px;width:100%;background:none;border:none;border-bottom:.5px solid var(--border);padding:0;text-align:left;font-size:15px}
+.srow:last-child{border-bottom:none}
+.srow .tm{width:56px;flex:none;color:var(--muted);font-size:12px;font-weight:600}
+.srow .nm{flex:1;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.srow .am{font-weight:700;font-variant-numeric:tabular-nums;min-width:60px;text-align:right}
+.chip.sm{padding:1px 8px;font-size:11px}
+.flag{color:var(--red);font-size:11px;font-weight:700;margin-left:4px;white-space:nowrap}
+.btn{display:block;width:100%;border:none;background:var(--btn);color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:700;text-align:center}
+.btn.o{background:var(--card);color:var(--ink);border:.5px solid var(--border)}
+.btn.del{background:var(--card);color:var(--delete);border:.5px solid var(--border)}
+.btn:disabled{opacity:.35}
+.row2{display:flex;gap:8px}.row2 .btn{flex:1}.row2 .btn.big{flex:2}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.head b{font-size:17px}
+.fld{background:var(--card);border:.5px solid var(--border);border-radius:12px;padding:7px 12px;margin-bottom:8px}
+.fld .lbl{margin-bottom:0}
+.fld .field{font-size:16px}
+.err{color:var(--red);font-size:13px;font-weight:600;margin:0 2px 8px}
+.note{color:var(--muted);font-size:13px;margin:6px 2px 12px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.pad button{background:var(--card);border:.5px solid var(--border);border-radius:14px;min-height:58px;font-size:22px;font-weight:600}
+.pad button:active{background:var(--chip)}
+.amt{background:var(--btn);color:#fff;border-radius:14px;padding:10px 16px;margin-bottom:8px;text-align:right}
+.amt small{display:block;font-size:12px;color:#C9C3BA;font-weight:600}
+.amt b{font-size:36px;font-weight:700;font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chips .chip{border:none;font-size:14px;padding:8px 12px;min-height:36px}
+.chips .chip.add{border:.5px dashed var(--faint);background:var(--card)}
+.mini{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.mini .fld{flex:1;margin:0}
+.lockbar{background:var(--chip);border-radius:14px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lockbar b{display:block}.lockbar span{font-size:13px;color:var(--muted)}
+.lockbar .btn{width:auto;padding:10px 16px}
+.pm{display:flex;align-items:center;gap:12px;min-height:52px;border-bottom:.5px solid var(--border)}
+.pm:last-child{border-bottom:none}
+.pm span.n{flex:1;font-weight:600}.pm .s{color:var(--muted);font-size:13px}
+.tgl{width:46px;height:28px;border-radius:14px;background:var(--check);border:none;position:relative;flex:none}
+.tgl i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:11px;background:#fff;transition:left .15s ease}
+.tgl[aria-checked="true"]{background:var(--btn)}
+.tgl[aria-checked="true"] i{left:21px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));width:min(398px,calc(100% - 32px));z-index:20;background:var(--btn);color:#fff;border-radius:12px;padding:6px 8px 6px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;font-size:14px}
+#toast button{border:none;background:none;color:#fff;font-weight:700;font-size:15px;padding:10px 12px;text-decoration:underline;text-underline-offset:3px}
+
+/* tab bar */
+nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);z-index:10;
+  padding:8px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--page) 75%,rgba(246,244,241,0));
+}
+.tabs{display:flex;gap:4px;background:var(--card);border:.5px solid var(--border);border-radius:16px;padding:4px}
+.tabs button{flex:1;border:none;background:transparent;border-radius:12px;min-height:48px;font-size:12px;font-weight:600;color:var(--faint);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tabs button.on{background:var(--btn);color:#fff}
+.tabs svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
-<header>
-  <h1>stalltrack</h1>
-  <p class="tag">checklist &middot; sales &middot; cash-up</p>
+
+<div id="splash" role="presentation" aria-label="stalltrack from oat">
+  <div class="hero">stalltrack</div>
+  <div class="tagline">checklist · sales · cash-up</div>
+  <div class="from"><span>from</span><span data-wm style="font-size:22px"></span></div>
+</div>
+
+<header class="top">
+  <span data-wm style="font-size:26px"></span>
+  <div class="right">
+    <div class="name" id="hname">stalltrack</div>
+    <button class="gear" id="gear" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
 </header>
 
-<div class="tabs" id="tabs">
-  <button data-v="ck" class="on">Checklist</button>
-  <button data-v="sales">Sales</button>
-  <button data-v="cash">Cash-up</button>
-</div>
+<main>
+  <section id="v-ck"></section>
+  <section id="v-sales" hidden></section>
+  <section id="v-settings" hidden></section>
+  <section id="v-cash" hidden></section>
+</main>
 
-<div class="daterow" id="daterow" style="display:none">
-  <button class="daybtn" id="dprev" aria-label="previous day">&#8249;</button>
-  <div class="datelabel"><span id="dlabel"></span><input type="date" id="dinput"></div>
-  <button class="daybtn" id="dnext" aria-label="next day">&#8250;</button>
-</div>
-
-<section id="v-ck">
-  <div class="prog"><span id="ckcount"></span><button class="hdel" id="ckreset" style="font-size:13px">reset checks</button></div>
-  <div id="cklist"></div>
-  <div class="card addrow">
-    <input id="cknew" placeholder="Add an item..." maxlength="40">
-    <button class="hdel" id="ckadd" style="font-size:20px; color:var(--ink)">&#43;</button>
+<nav>
+  <div class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-v="ck" class="on" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.2 1.2L6.8 5M3.5 12l1.2 1.2L6.8 11M3.5 18l1.2 1.2L6.8 17"/></svg>Checklist
+    </button>
+    <button role="tab" data-v="sales" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Sales
+    </button>
+    <button role="tab" data-v="cash" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg>Cash-up
+    </button>
   </div>
-  <p class="hint">ticked items reset for the next market with the button above</p>
-</section>
-
-<section id="v-sales" style="display:none">
-  <div class="card">
-    <label>What sold</label>
-    <input id="sitemname" placeholder="Item name" maxlength="40">
-  </div>
-  <div style="display:flex; gap:10px">
-    <div class="card" style="flex:1"><label>Qty</label>
-      <input id="sqty" inputmode="decimal" placeholder="1"></div>
-    <div class="card" style="flex:2"><label>Price each</label>
-      <div class="moneywrap"><span>$</span><input id="sprice" inputmode="decimal" placeholder="0.00"></div></div>
-  </div>
-  <div class="card"><label>Paid by</label>
-    <div class="seg" id="sseg">
-      <button data-m="cash" class="on">Cash</button>
-      <button data-m="eftpos">EFTPOS</button>
-    </div>
-  </div>
-  <button id="sadd">Log the sale</button>
-
-  <div class="result">
-    <p>Takings on this day</p>
-    <div class="net" id="stotal">$0.00</div>
-    <div class="breakdown" id="sbreak"></div>
-  </div>
-
-  <section id="slistwrap" style="display:none">
-    <p class="sect">Logged sales</p>
-    <div id="slist"></div>
-  </section>
-</section>
-
-<section id="v-cash" style="display:none">
-  <div class="card"><label>Venue</label>
-    <input id="venue" placeholder="Which market?" list="venues">
-    <datalist id="venues">
-      <option value="Market Central Taup&#333;"></option>
-      <option value="TLBM Zespri"></option>
-      <option value="Agrodome"></option>
-      <option value="Rotorua Night Market"></option>
-    </datalist>
-  </div>
-
-  <p class="sect">Before doors</p>
-  <div class="card"><label>Float (cash you start with)</label>
-    <div class="moneywrap"><span>$</span><input id="float" inputmode="decimal" placeholder="0.00"></div></div>
-  <div class="card"><label>Stall fee</label>
-    <div class="moneywrap"><span>$</span><input id="stallfee" inputmode="decimal" placeholder="0.00"></div></div>
-  <div class="card"><label>Other expenses</label>
-    <div class="moneywrap"><span>$</span><input id="expenses" inputmode="decimal" placeholder="0.00"></div></div>
-
-  <p class="sect">At pack-down</p>
-  <div class="card"><label>Cash in the tin</label>
-    <div class="moneywrap"><span>$</span><input id="tin" inputmode="decimal" placeholder="0.00"></div></div>
-  <div class="card"><label>EFTPOS total</label>
-    <div class="moneywrap"><span>$</span><input id="pos" inputmode="decimal" placeholder="0.00"></div></div>
-  <div class="card"><label>EFTPOS fee %</label>
-    <div class="moneywrap"><input id="pct" inputmode="decimal" placeholder="2.5" style="font-size:19px"></div></div>
-
-  <div class="result">
-    <p>Net for the day</p>
-    <div class="net" id="net">$0.00</div>
-    <div class="breakdown" id="breakdown"></div>
-  </div>
-
-  <button id="save" disabled>Save this cash-up</button>
-  <p class="hint">saved on this phone only</p>
-
-  <section id="histwrap" style="display:none">
-    <p class="sect">Recent markets</p>
-    <div id="hist"></div>
-  </section>
-</section>
+</nav>
 
 <script>
-const $ = id => document.getElementById(id);
-const fmt = n => {
-  const s = Math.abs(n).toLocaleString("en-NZ",{minimumFractionDigits:2, maximumFractionDigits:2});
-  return (n < 0 ? "-$" : "$") + s;
-};
-const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fmtDate = s => { const p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2], 12)
-  .toLocaleDateString("en-NZ",{weekday:"short", day:"numeric", month:"short"}); };
-const iso = x => x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
-let d = new Date(); d.setHours(12,0,0,0);
-function paintDate(){
-  $("dlabel").textContent = d.toLocaleDateString("en-NZ",{weekday:"long", day:"numeric", month:"short"});
-  $("dinput").value = iso(d);
+"use strict";
+
+/* ---------- helpers ---------- */
+var KEY = "stalltrack.v1";
+function h(tag, attrs) {
+  var el = document.createElement(tag);
+  if (attrs) for (var k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "text") el.textContent = attrs[k];
+    else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), attrs[k]);
+    else if (attrs[k] === true) el.setAttribute(k, "");
+    else if (attrs[k] !== false && attrs[k] != null) el.setAttribute(k, attrs[k]);
+  }
+  for (var i = 2; i < arguments.length; i++) {
+    var c = arguments[i];
+    if (c == null || c === false) continue;
+    el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
 }
-$("dprev").onclick = () => { d.setDate(d.getDate()-1); paintDate(); renderSales(); };
-$("dnext").onclick = () => { d.setDate(d.getDate()+1); paintDate(); renderSales(); };
-$("dinput").onchange = e => {
-  const p = e.target.value.split("-");
-  if (p.length === 3) d = new Date(+p[0], +p[1]-1, +p[2], 12);
-  paintDate(); renderSales();
-};
+function svg(html) { var d = document.createElement("div"); d.innerHTML = html; return d.firstChild; }
+var CHECK = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-let view = "ck";
-$("tabs").onclick = e => {
-  const b = e.target.closest("button"); if (!b) return;
-  view = b.dataset.v;
-  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
-  $("v-ck").style.display      = view === "ck"    ? "block" : "none";
-  $("v-sales").style.display   = view === "sales" ? "block" : "none";
-  $("v-cash").style.display    = view === "cash"  ? "block" : "none";
-  $("daterow").style.display   = view === "ck"    ? "none"  : "flex";
-  if (view === "sales") renderSales();
-};
-
-const DEFAULTS = [
-  "Table + tablecloth","Gazebo + weights","Display stands","Signage + pricing",
-  "EFTPOS machine charged","Float counted","Stock counted + packed","Bags + packaging",
-  "Apron + cash box","Tape, scissors, pens","Care cards / signage cards",
-  "Water + snacks","Chair","Sunscreen + hat"
-];
-const CKKEY = "stalltrack.checklist";
-let ck;
-try { ck = JSON.parse(localStorage.getItem(CKKEY)); } catch(e) { ck = null; }
-if (!Array.isArray(ck) || !ck.length) ck = DEFAULTS.map(t => ({id: Date.now()+Math.random(), t, done:false}));
-const saveCk = () => localStorage.setItem(CKKEY, JSON.stringify(ck));
-function renderCk(){
-  const done = ck.filter(i => i.done).length;
-  $("ckcount").textContent = done + " of " + ck.length + " packed";
-  $("cklist").innerHTML = ck.map(i =>
-    '<div class="card ck' + (i.done ? " done" : "") + '">' +
-    '<button class="ckbox" data-id="' + i.id + '" aria-label="toggle">&#10003;</button>' +
-    '<span class="cktext">' + esc(i.t) + '</span>' +
-    '<button class="ckx" data-x="' + i.id + '" aria-label="remove">&times;</button></div>'
-  ).join("");
+/* oat wordmark: lowercase Quicksand bold, tilted grain as the full stop, set low */
+function wordmark(el) {
+  el.className = (el.className ? el.className + " " : "") + "wm";
+  el.setAttribute("role", "img");
+  el.setAttribute("aria-label", "oat");
+  el.appendChild(h("span", { text: "oat" }));
+  el.appendChild(svg('<svg width=".26em" height=".38em" viewBox="21 17 18 26" aria-hidden="true"><g transform="rotate(-20 30 30)"><ellipse cx="30" cy="30" rx="8" ry="13" fill="currentColor"/><path d="M30 21V39" stroke="#F6F4F1" stroke-width="2.6" stroke-linecap="round"/></g></svg>'));
 }
-$("cklist").onclick = e => {
-  const box = e.target.closest(".ckbox");
-  if (box){ const it = ck.find(i => String(i.id) === box.dataset.id); it.done = !it.done; saveCk(); renderCk(); return; }
-  const x = e.target.closest(".ckx");
-  if (x){ ck = ck.filter(i => String(i.id) !== x.dataset.x); saveCk(); renderCk(); }
-};
-function addCkItem(){
-  const t = $("cknew").value.trim(); if (!t) return;
-  ck.push({id: Date.now()+Math.random(), t, done:false});
-  $("cknew").value = ""; saveCk(); renderCk();
+Array.prototype.forEach.call(document.querySelectorAll("[data-wm]"), wordmark);
+
+/* ---------- state (localStorage, always guarded) ---------- */
+var state = { v: 1, header: { market: "", date: "", position: "", note: "" }, items: [], packedOpen: false,
+  settings: { eftpos: false, bank: false, fee: "" }, buttons: [], sales: [], locked: {}, lastMethod: "cash", cash: {} };
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var s = JSON.parse(raw);
+    if (!s || typeof s !== "object") return;
+    if (s.header && typeof s.header === "object") {
+      ["market", "date", "position", "note"].forEach(function (k) {
+        if (typeof s.header[k] === "string") state.header[k] = s.header[k];
+      });
+    }
+    if (Array.isArray(s.items)) {
+      state.items = s.items.filter(function (i) { return i && typeof i.t === "string" && i.t; }).map(function (i) {
+        return { id: String(i.id || uid()), t: i.t, group: typeof i.group === "string" ? i.group : "", done: !!i.done };
+      });
+    }
+    if (s.settings && typeof s.settings === "object") {
+      state.settings.eftpos = !!s.settings.eftpos; state.settings.bank = !!s.settings.bank;
+      if (typeof s.settings.fee === "string") state.settings.fee = s.settings.fee.slice(0, 6);
+    }
+    function int(n) { return typeof n === "number" && isFinite(n) ? Math.round(n) : null; }
+    if (Array.isArray(s.buttons)) {
+      state.buttons = s.buttons.filter(function (b) { return b && typeof b.name === "string" && b.name && ["fixed", "points", "deal"].indexOf(b.type) >= 0; }).map(function (b) {
+        return { id: String(b.id || uid()), name: b.name.slice(0, 30), type: b.type, price: int(b.price) || 0,
+          prices: Array.isArray(b.prices) ? b.prices.map(int).filter(function (n) { return n > 0; }).slice(0, 8) : [],
+          qty: int(b.qty) > 0 ? int(b.qty) : 1, total: int(b.total) || 0 };
+      });
+    }
+    if (Array.isArray(s.sales)) {
+      state.sales = s.sales.filter(function (x) { return x && int(x.amount) !== null && typeof x.date === "string"; }).map(function (x) {
+        return { id: String(x.id || uid()), ts: int(x.ts) || 0, date: x.date, name: typeof x.name === "string" ? x.name.slice(0, 30) : "Other",
+          qty: int(x.qty) > 0 ? int(x.qty) : 1, amount: int(x.amount), method: ["cash", "eftpos", "bank"].indexOf(x.method) >= 0 ? x.method : "cash", check: !!x.check };
+      });
+    }
+    if (s.locked && typeof s.locked === "object") Object.keys(s.locked).forEach(function (k) { if (s.locked[k] === true) state.locked[k] = true; });
+    if (s.cash && typeof s.cash === "object") Object.keys(s.cash).forEach(function (k) {
+      var c = s.cash[k]; if (!c || typeof c !== "object") return;
+      state.cash[k] = { float: int(c.float), counted: int(c.counted), eftpos: int(c.eftpos), bank: int(c.bank),
+        fee: typeof c.fee === "string" ? c.fee.slice(0, 6) : null, saved: c.saved === true,
+        exp: Array.isArray(c.exp) ? c.exp.filter(function (e) { return e && typeof e.label === "string" && int(e.amount) > 0; }).map(function (e) {
+          return { id: String(e.id || uid()), label: e.label.slice(0, 30), amount: int(e.amount), kind: e.kind === "personal" ? "personal" : "business", tin: e.tin !== false }; }) : [] };
+    });
+    if (["cash", "eftpos", "bank"].indexOf(s.lastMethod) >= 0) state.lastMethod = s.lastMethod;
+  } catch (e) { /* storage unavailable or corrupt: start empty */ }
 }
-$("ckadd").onclick = addCkItem;
-$("cknew").addEventListener("keydown", e => { if (e.key === "Enter") addCkItem(); });
-$("ckreset").onclick = () => { ck.forEach(i => i.done = false); saveCk(); renderCk(); };
-renderCk();
-
-const SKEY = "stalltrack.sales";
-const loadS = () => { try { return JSON.parse(localStorage.getItem(SKEY)) || []; } catch(e) { return []; } };
-const saveS = a => localStorage.setItem(SKEY, JSON.stringify(a.slice(0,400)));
-let smethod = "cash";
-$("sseg").onclick = e => {
-  const b = e.target.closest("button"); if (!b) return;
-  smethod = b.dataset.m;
-  document.querySelectorAll("#sseg button").forEach(x => x.classList.toggle("on", x === b));
-};
-$("sadd").onclick = () => {
-  const name = $("sitemname").value.trim();
-  const qty = parseFloat($("sqty").value) || 1;
-  const price = parseFloat($("sprice").value) || 0;
-  if (!name || price <= 0) return;
-  const a = loadS();
-  a.unshift({id: Date.now(), date: iso(d), name, qty, price, method: smethod});
-  saveS(a);
-  $("sitemname").value = ""; $("sqty").value = ""; $("sprice").value = "";
-  renderSales();
-};
-function renderSales(){
-  const a = loadS().filter(x => x.date === iso(d));
-  const cash = a.filter(x => x.method === "cash").reduce((t,x) => t + x.qty * x.price, 0);
-  const eft  = a.filter(x => x.method === "eftpos").reduce((t,x) => t + x.qty * x.price, 0);
-  const tot  = cash + eft;
-  $("stotal").textContent = fmt(tot);
-  let rows = "";
-  if (tot) rows += row("Cash takings", fmt(cash));
-  if (tot) rows += row("EFTPOS takings", fmt(eft));
-  $("sbreak").innerHTML = rows;
-  $("slistwrap").style.display = a.length ? "block" : "none";
-  $("slist").innerHTML = a.map(x =>
-    '<div class="card sitem"><div><div class="sv">' + esc(x.name) + '</div>' +
-    '<div class="sd">' + x.qty + " &times; " + fmt(x.price).slice(1) + " &middot; " + x.method + '</div></div>' +
-    '<div style="display:flex;align-items:center;gap:2px"><span class="samt">' + fmt(x.qty * x.price) + '</span>' +
-    '<button class="hdel" data-id="' + x.id + '" aria-label="delete">&times;</button></div></div>'
-  ).join("");
+var saveFailed = false;
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify({ v: 1, header: state.header, items: state.items, settings: state.settings, buttons: state.buttons, sales: state.sales, locked: state.locked, lastMethod: state.lastMethod, cash: state.cash })); saveFailed = false; }
+  catch (e) { saveFailed = true; }
 }
-function row(label, val){ return '<div class="brow"><span>' + label + '</span><span>' + val + '</span></div>'; }
-$("slist").onclick = e => {
-  const btn = e.target.closest(".hdel"); if (!btn) return;
-  saveS(loadS().filter(x => String(x.id) !== btn.dataset.id));
-  renderSales();
-};
-paintDate();
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+load();
 
-const num = id => parseFloat($(id).value) || 0;
-let last = {net:0};
-function compute(){
-  const fl = num("float"), sf = num("stallfee"), ex = num("expenses");
-  const tin = num("tin"), pos = num("pos"), pct = num("pct");
-  const cash = tin - fl;
-  const posNet = pos - (pos * pct / 100);
-  const net = cash + posNet - sf - ex;
-  last = {net, cash, posNet, sf, ex};
-  $("net").textContent = fmt(net);
-  $("net").style.color = net < 0 ? "#e8a79a" : "#fff";
-  let rows = "";
-  if (tin || fl) rows += row("Cash sales (tin minus float)", fmt(cash));
-  if (pos) rows += row("EFTPOS after fees", fmt(posNet));
-  if (sf) rows += row("Minus stall fee", "-" + fmt(sf).slice(1));
-  if (ex) rows += row("Minus other expenses", "-" + fmt(ex).slice(1));
-  $("breakdown").innerHTML = rows;
-  $("save").disabled = !(tin > 0 || pos > 0);
+/* ---------- dates: ISO stored, en-NZ shown ---------- */
+function niceDate(iso) {
+  var p = (iso || "").split("-");
+  if (p.length !== 3) return "";
+  var d = new Date(+p[0], +p[1] - 1, +p[2], 12);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-NZ", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
-document.querySelectorAll("#v-cash .card input").forEach(i => i.addEventListener("input", compute));
 
-const KEY = "stalltrack.entries";
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { return []; } };
-const saveAll = a => localStorage.setItem(KEY, JSON.stringify(a));
+/* ---------- checklist ---------- */
+var ck = document.getElementById("v-ck");
+var inputs = {};
+var listHost = h("div");
+var draftItem = "", draftGroup = "";
 
-$("save").onclick = () => {
-  const entries = load();
-  entries.unshift({
-    id: Date.now(), date: iso(d),
-    venue: $("venue").value.trim() || "Untitled venue",
-    net: last.net, cash: last.cash, posNet: last.posNet, sf: last.sf, ex: last.ex
+function headerCard() {
+  function text(key, label, ph, cls) {
+    var inp = h("input", { class: "field", type: "text", maxlength: "60", placeholder: ph, autocomplete: "off", value: state.header[key] });
+    inp.addEventListener("input", function () { state.header[key] = inp.value; save(); });
+    inputs[key] = inp;
+    return h("div", cls ? { class: cls } : null, h("label", { class: "lbl", text: label }), inp);
+  }
+  var dateShow = h("span", { text: niceDate(state.header.date) || "Set date" });
+  if (!state.header.date) dateShow.className = "empty";
+  var dateInp = h("input", { type: "date", "aria-label": "Market date", value: state.header.date });
+  dateInp.addEventListener("change", function () {
+    state.header.date = dateInp.value; save();
+    var n = niceDate(state.header.date);
+    dateShow.textContent = n || "Set date";
+    dateShow.className = n ? "" : "empty";
   });
-  saveAll(entries.slice(0,50));
-  const b = $("save"); b.textContent = "Saved \u2713"; b.disabled = true;
-  setTimeout(() => { b.textContent = "Save this cash-up"; compute(); }, 1200);
-  renderHist();
-};
-function renderHist(){
-  const entries = load();
-  $("histwrap").style.display = entries.length ? "block" : "none";
-  $("hist").innerHTML = entries.map(e =>
-    '<div class="card hitem"><div><div class="hv">' + esc(e.venue) + '</div><div class="hd">' +
-    fmtDate(e.date) + '</div></div><div style="display:flex;align-items:center;gap:2px">' +
-    '<span class="hnet">' + fmt(e.net) + '</span>' +
-    '<button class="hdel" data-id="' + e.id + '" aria-label="delete">&times;</button></div></div>'
-  ).join("");
+  inputs.date = dateInp; inputs.dateShow = dateShow;
+  var note = h("textarea", { class: "field", rows: "2", maxlength: "400", placeholder: "Entry time, gate, pack-down time…" });
+  note.value = state.header.note;
+  note.addEventListener("input", function () { state.header.note = note.value; save(); });
+  inputs.note = note;
+
+  return h("div", { class: "card" },
+    text("market", "Market", "Which market?"),
+    h("div", { class: "two" },
+      h("div", null, h("label", { class: "lbl", text: "Date" }), h("div", { class: "datebox" }, dateShow, dateInp)),
+      text("position", "Stall position", "Site, row…")),
+    h("div", { class: "split" }, h("label", { class: "lbl", text: "Notes" }), note));
 }
-$("hist").onclick = e => {
-  const btn = e.target.closest(".hdel"); if (!btn) return;
-  saveAll(load().filter(x => String(x.id) !== btn.dataset.id));
-  renderHist();
-};
-renderHist();
+
+function itemRow(it) {
+  var pk = it.done;
+  var hit = h("button", { class: "hit", "aria-pressed": pk ? "true" : "false", "aria-label": (pk ? "Unpack " : "Pack ") + it.t,
+    onclick: function () { it.done = !it.done; save(); renderList(); } },
+    h("span", { class: "box" }, svg(CHECK)),
+    h("span", { class: "txt", text: it.t }));
+  var x = h("button", { class: "x", "aria-label": "Remove " + it.t, text: "×",
+    onclick: function () { state.items = state.items.filter(function (i) { return i.id !== it.id; }); save(); renderList(); } });
+  return h("div", { class: "item" + (pk ? " packed" : "") }, hit, x);
+}
+
+function groupsOf(items) {
+  var order = [], map = {};
+  items.forEach(function (i) {
+    var g = i.group || "";
+    if (!(g in map)) { map[g] = []; order.push(g); }
+    map[g].push(i);
+  });
+  order.sort(function (a, b) { return a === "" ? -1 : b === "" ? 1 : 0; }); // ungrouped first, stable otherwise
+  return order.map(function (g) { return { name: g, items: map[g] }; });
+}
+
+function renderList() {
+  var frag = document.createDocumentFragment();
+  var items = state.items;
+  var open = items.filter(function (i) { return !i.done; });
+  var packed = items.filter(function (i) { return i.done; });
+  var pct = items.length ? Math.round(packed.length / items.length * 100) : 0;
+
+  frag.appendChild(h("div", { class: "prog" },
+    h("span", { text: items.length ? packed.length + " of " + items.length + " packed" : "No items yet" }),
+    h("button", { class: "link", text: "new market", onclick: newMarket })));
+  frag.appendChild(h("div", { class: "bar" }, h("i", { style: "width:" + pct + "%" })));
+
+  if (!items.length) {
+    frag.appendChild(h("div", { class: "card empty-card" }, h("b", { text: "Add your first item" }),
+      h("span", { text: "Build your own list below. It stays for every market." })));
+  } else if (!open.length) {
+    frag.appendChild(h("div", { class: "card done-msg", text: "All packed" }));
+  } else {
+    frag.appendChild(h("div", { class: "sec" }, h("span", { text: "Still to pack" }), h("span", { class: "chip", text: String(open.length) })));
+    groupsOf(open).forEach(function (g) {
+      if (g.name) {
+        var total = items.filter(function (i) { return i.group === g.name; }).length;
+        var got = total - g.items.length;
+        frag.appendChild(h("div", { class: "sec" }, h("span", { text: g.name }), h("span", { class: "chip", text: got + "/" + total })));
+      }
+      var card = h("div", { class: "card list" });
+      g.items.forEach(function (it) { card.appendChild(itemRow(it)); });
+      frag.appendChild(card);
+    });
+  }
+
+  frag.appendChild(addCard());
+
+  if (packed.length) {
+    var body = h("div", { class: "card list", style: "margin-top:8px", hidden: !state.packedOpen });
+    packed.forEach(function (it) {
+      var row = itemRow(it);
+      if (it.group) row.querySelector(".hit").appendChild(h("span", { class: "chip", text: it.group }));
+      body.appendChild(row);
+    });
+    var fold = h("button", { class: "fold", "aria-expanded": state.packedOpen ? "true" : "false",
+      onclick: function () { state.packedOpen = !state.packedOpen; renderList(); } },
+      h("span", { text: "Packed (" + packed.length + ")" }),
+      h("span", { class: "car", text: "›" }));
+    frag.appendChild(h("div", { style: "margin-top:14px" }, fold, body));
+  }
+
+  if (saveFailed) frag.appendChild(h("p", { class: "soon", style: "padding:14px 0;color:var(--red)", text: "Could not save on this device. Your list will be lost when you close the app." }));
+
+  listHost.replaceChildren(frag);
+}
+
+function addCard() {
+  var names = [];
+  state.items.forEach(function (i) { if (i.group && names.indexOf(i.group) < 0) names.push(i.group); });
+  var dl = h("datalist", { id: "groups" });
+  names.forEach(function (n) { dl.appendChild(h("option", { value: n })); });
+
+  var inp = h("input", { class: "field", type: "text", maxlength: "40", placeholder: "Add an item…", autocomplete: "off", enterkeyhint: "done", "aria-label": "New item", value: draftItem });
+  var grp = h("input", { class: "field", type: "text", maxlength: "24", placeholder: "Group (optional)", autocomplete: "off", list: "groups", "aria-label": "Group", value: draftGroup, style: "font-size:14px" });
+  var btn = h("button", { class: "addbtn", "aria-label": "Add item", text: "+", disabled: !draftItem.trim() });
+  function sync() { draftItem = inp.value; draftGroup = grp.value; btn.disabled = !inp.value.trim(); }
+  function add() {
+    var t = inp.value.trim().slice(0, 40);
+    if (!t) return;
+    state.items.push({ id: uid(), t: t, group: grp.value.trim().slice(0, 24), done: false });
+    draftItem = ""; // keep the group so several items can be added to it in a row
+    draftGroup = grp.value.trim();
+    save(); renderList();
+    var again = listHost.querySelector('input[aria-label="New item"]');
+    if (again) again.focus();
+  }
+  inp.addEventListener("input", sync);
+  grp.addEventListener("input", sync);
+  inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); add(); } });
+  grp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); add(); } });
+  btn.addEventListener("click", add);
+
+  return h("div", { class: "card", style: "margin-top:10px" },
+    h("div", { class: "add" }, inp, btn),
+    h("div", { class: "groupfield" }, grp),
+    dl);
+}
+
+function newMarket() {
+  if (!confirm("Start a new market? This clears all ticks and the market name, date, position and notes. Your items stay.")) return;
+  state.items.forEach(function (i) { i.done = false; });
+  state.header = { market: "", date: "", position: "", note: "" };
+  save();
+  inputs.market.value = ""; inputs.position.value = ""; inputs.note.value = ""; inputs.date.value = "";
+  inputs.dateShow.textContent = "Set date"; inputs.dateShow.className = "empty";
+  renderList();
+}
+
+ck.appendChild(headerCard());
+ck.appendChild(listHost);
+renderList();
+
+/* ---------- money (integer cents), NZD / en-NZ ---------- */
+var NZD = new Intl.NumberFormat("en-NZ", { style: "currency", currency: "NZD" });
+function money(c) { return NZD.format(c / 100); }
+function parseMoney(str) {
+  str = String(str == null ? "" : str).trim().replace(/^\$/, "");
+  if (!/^\d{1,7}(\.\d{1,2})?$|^\.\d{1,2}$/.test(str)) return null;
+  return Math.round(parseFloat(str) * 100);
+}
+function todayISO() {
+  var d = new Date(), m = d.getMonth() + 1, day = d.getDate();
+  return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (day < 10 ? "0" : "") + day;
+}
+function timeOf(ts) { return new Date(ts).toLocaleTimeString("en-NZ", { hour: "numeric", minute: "2-digit", hour12: true }); }
+function hhmm(ts) { var d = new Date(ts); return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes(); }
+var METHOD_NAMES = { cash: "Cash", eftpos: "EFTPOS", bank: "Bank transfer" };
+function methods() { var m = ["cash"]; if (state.settings.eftpos) m.push("eftpos"); if (state.settings.bank) m.push("bank"); return m; }
+function curMethod() { return methods().indexOf(state.lastMethod) >= 0 ? state.lastMethod : "cash"; }
+
+/* ---------- toast with undo ---------- */
+var toastEl = null, toastTimer = null;
+function toast(msg, undo) {
+  clearToast();
+  toastEl = h("div", { id: "toast", role: "status" }, h("span", { text: msg }),
+    undo ? h("button", { text: "Undo", onclick: function () { clearToast(); undo(); } }) : null);
+  document.body.appendChild(toastEl);
+  toastTimer = setTimeout(clearToast, 5000);
+}
+function clearToast() { clearTimeout(toastTimer); if (toastEl) { toastEl.remove(); toastEl = null; } }
+
+/* ---------- sales ---------- */
+var sv = document.getElementById("v-sales");
+var ui = { mode: "main", btn: null, sale: null, pad: null };
+function isLocked() { return !!state.locked[todayISO()]; }
+function todaysSales() { var t = todayISO(); return state.sales.filter(function (s) { return s.date === t; }).sort(function (a, b) { return b.ts - a.ts; }); }
+function go(mode, extra) { ui.mode = mode; for (var k in extra) ui[k] = extra[k]; clearToast(); renderSales(); window.scrollTo(0, 0); }
+
+function logSale(name, qty, amount, check) {
+  if (isLocked()) return;
+  var s = { id: uid(), ts: Date.now(), date: todayISO(), name: name, qty: qty, amount: amount, method: curMethod(), check: !!check };
+  state.sales.push(s); save();
+  renderSales();
+  toast("Added " + name + " · " + money(amount), function () {
+    state.sales = state.sales.filter(function (x) { return x.id !== s.id; }); save(); renderSales();
+  });
+}
+
+function backBar(title, onBack, right) {
+  return h("div", { class: "head" }, h("button", { class: "link", text: "‹ Back", onclick: onBack }), h("b", { text: title }), right || h("span"));
+}
+function field(label, inp) { return h("div", { class: "fld" }, h("label", { class: "lbl", text: label }), inp); }
+function methodSeg(cur, list, onPick) {
+  var seg = h("div", { class: "seg", role: "group", "aria-label": "Payment method" });
+  list.forEach(function (m) {
+    seg.appendChild(h("button", { class: m === cur ? "on" : "", "aria-pressed": m === cur ? "true" : "false", text: METHOD_NAMES[m], onclick: function () { onPick(m); } }));
+  });
+  return seg;
+}
+function typeTag(t) { return t === "fixed" ? "fixed" : t === "points" ? "price points" : "deal"; }
+function tileSub(b) {
+  return b.type === "fixed" ? money(b.price) : b.type === "points" ? "choose price" : b.qty + " for " + money(b.total);
+}
+
+function renderSales() {
+  sv.replaceChildren();
+  sv.classList.toggle("locked", isLocked() && ui.mode === "main");
+  ({ main: viewMain, pad: viewPad, points: viewPoints, buttons: viewButtons, bform: viewBForm, edit: viewEdit }[ui.mode] || viewMain)();
+}
+
+function viewMain() {
+  var today = todaysSales(), locked = isLocked(), list = methods();
+  if (locked) {
+    sv.appendChild(h("div", { class: "lockbar" }, h("div", null, h("b", { text: "Cash-up saved" }), h("span", { text: "Sales are locked." })),
+      h("button", { class: "btn", text: "Reopen", onclick: reopenToday })));
+  }
+  if (list.length > 1) sv.appendChild(methodSeg(curMethod(), list, function (m) { state.lastMethod = m; save(); renderSales(); }));
+  else sv.appendChild(h("p", { class: "note", style: "margin-top:0", text: "Cash only. Add EFTPOS or bank transfer in Settings." }));
+
+  var sum = 0, checks = 0;
+  today.forEach(function (s) { sum += s.amount; if (s.check) checks++; });
+  sv.appendChild(h("div", { class: "total" }, h("b", { text: money(sum) }),
+    h("span", null, today.length + (today.length === 1 ? " sale" : " sales"), checks ? h("br") : null,
+      checks ? h("span", { style: "color:#fff" }, h("span", { class: "dot", text: "● " }), checks + " to check") : null)));
+
+  if (!state.buttons.length) {
+    sv.appendChild(h("div", { class: "card empty-card" }, h("b", { text: "Add your first button" }),
+      h("span", { text: "Set up the things you sell, then log each sale in one tap." }),
+      h("button", { class: "btn", style: "margin-top:12px", text: "Add button", onclick: function () { go("bform", { btn: null }); } })));
+  }
+  var grid = h("div", { class: "grid" });
+  state.buttons.forEach(function (b) {
+    grid.appendChild(h("button", { class: "tile", onclick: function () {
+      if (b.type === "fixed") logSale(b.name, 1, b.price, false);
+      else if (b.type === "deal") logSale(b.name, b.qty, b.total, false);
+      else go("points", { btn: b });
+    } }, h("span", { class: "tg", text: typeTag(b.type) }), h("span", { text: b.name }), h("small", { text: tileSub(b) })));
+  });
+  grid.appendChild(h("button", { class: "tile quiet", text: "Other amount", onclick: function () {
+    go("pad", { pad: { title: "Other amount", onOk: function (c) { logSale("Other", 1, c, true); } } });
+  } }));
+  sv.appendChild(grid);
+  if (state.buttons.length) sv.appendChild(h("div", { style: "text-align:center;margin-bottom:12px" }, h("button", { class: "link", text: "Edit buttons", onclick: function () { go("buttons", {}); } })));
+
+  if (today.length) {
+    sv.appendChild(h("div", { class: "sec" }, h("span", { text: "Today’s sales" }), h("span", { class: "chip", text: String(today.length) })));
+    var card = h("div", { class: "card list" });
+    today.forEach(function (s) {
+      card.appendChild(h("button", { class: "srow", "aria-label": "Edit " + s.name, onclick: function () { go("edit", { sale: s }); } },
+        h("span", { class: "tm", text: timeOf(s.ts) }),
+        h("span", { class: "nm" }, s.name + (s.qty > 1 ? " ×" + s.qty : ""), s.check ? h("span", { class: "flag", text: "● check" }) : null),
+        h("span", { class: "chip sm", text: METHOD_NAMES[s.method] }),
+        h("span", { class: "am", text: money(s.amount) })));
+    });
+    sv.appendChild(card);
+
+    var by = {}, order = [];
+    today.forEach(function (s) {
+      var k = s.name.toLowerCase();
+      if (!by[k]) { by[k] = { name: s.name, n: 0, amt: 0 }; order.push(k); }
+      by[k].n += s.qty; by[k].amt += s.amount;
+    });
+    order.sort(function (a, b) { return by[b].amt - by[a].amt; });
+    sv.appendChild(h("div", { class: "sec" }, h("span", { text: "By item" })));
+    var bc = h("div", { class: "card list" });
+    order.forEach(function (k) {
+      bc.appendChild(h("div", { class: "srow", style: "padding:0" }, h("span", { class: "nm", text: by[k].name }),
+        h("span", { class: "tm", style: "width:auto", text: "×" + by[k].n }), h("span", { class: "am", text: money(by[k].amt) })));
+    });
+    sv.appendChild(bc);
+  }
+}
+
+/* number pad */
+function viewPad() {
+  var p = ui.pad, val = p.val || "";
+  var shown = h("b", { text: "$0" }), sub = h("small", { text: p.title });
+  var ok = h("button", { class: "btn", disabled: true, text: "Add sale" });
+  function upd() {
+    var c = parseMoney(val === "." ? "" : val);
+    shown.textContent = "$" + (val || "0"); p.val = val;
+    ok.disabled = !c; ok.textContent = c ? "Add sale · " + money(c) : "Add sale";
+  }
+  function press(k) {
+    if (k === "⌫") val = val.slice(0, -1);
+    else if (k === ".") { if (val.indexOf(".") < 0) val = (val || "0") + "."; }
+    else {
+      var dot = val.indexOf(".");
+      if (dot >= 0 && val.length - dot > 2) return;
+      if (dot < 0 && val.length >= 6) return;
+      val = (val === "0" ? "" : val) + k;
+    }
+    upd();
+  }
+  sv.appendChild(backBar(p.title, function () { go("main", {}); }));
+  sv.appendChild(h("div", { class: "amt" }, sub, shown));
+  var pad = h("div", { class: "pad" });
+  ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"].forEach(function (k) {
+    pad.appendChild(h("button", { text: k, "aria-label": k === "⌫" ? "Delete digit" : k, onclick: function () { press(k); } }));
+  });
+  sv.appendChild(pad);
+  ok.addEventListener("click", function () {
+    var c = parseMoney(val); if (!c) return;
+    var done = p.onOk; ui.mode = "main"; done(c);
+  });
+  sv.appendChild(ok);
+  upd();
+}
+
+/* price-points chooser */
+function viewPoints() {
+  var b = ui.btn;
+  sv.appendChild(backBar(b.name, function () { go("main", {}); }));
+  sv.appendChild(h("p", { class: "note", style: "margin-top:0", text: "Tap a price to log the sale." }));
+  var chips = h("div", { class: "chips" });
+  b.prices.slice().sort(function (x, y) { return x - y; }).forEach(function (c) {
+    chips.appendChild(h("button", { class: "chip", text: money(c), onclick: function () { ui.mode = "main"; logSale(b.name, 1, c, false); } }));
+  });
+  chips.appendChild(h("button", { class: "chip add", text: "+ other", onclick: function () {
+    go("pad", { pad: { title: b.name, onOk: function (c) {
+      if (b.prices.indexOf(c) < 0) { b.prices.push(c); if (b.prices.length > 8) b.prices.shift(); }
+      logSale(b.name, 1, c, false);
+    } } });
+  } }));
+  sv.appendChild(chips);
+}
+
+/* button manager */
+function viewButtons() {
+  sv.appendChild(backBar("Edit buttons", function () { go("main", {}); }));
+  var card = h("div", { class: "card list" });
+  state.buttons.forEach(function (b) {
+    card.appendChild(h("button", { class: "srow", onclick: function () { go("bform", { btn: b }); } },
+      h("span", { class: "nm", text: b.name }), h("span", { class: "chip sm", text: typeTag(b.type) }),
+      h("span", { class: "am", style: "min-width:90px", text: b.type === "points" ? b.prices.length + " prices" : b.type === "fixed" ? money(b.price) : b.qty + " for " + money(b.total) })));
+  });
+  sv.appendChild(card);
+  sv.appendChild(h("button", { class: "btn", style: "margin-top:10px", text: "New button", onclick: function () { go("bform", { btn: null }); } }));
+}
+
+function viewBForm() {
+  var b = ui.btn, isNew = !b;
+  var d = b ? { name: b.name, type: b.type, price: b.price ? (b.price / 100).toFixed(2) : "", prices: b.prices.slice(), qty: String(b.qty), total: b.total ? (b.total / 100).toFixed(2) : "" }
+            : { name: "", type: "fixed", price: "", prices: [], qty: "", total: "" };
+  var err = h("p", { class: "err", hidden: true });
+  var body = h("div");
+  var nameInp = h("input", { class: "field", type: "text", maxlength: "30", placeholder: "e.g. name of the item", autocomplete: "off", value: d.name });
+  nameInp.addEventListener("input", function () { d.name = nameInp.value; });
+  var typeSeg = h("div", { class: "seg", role: "group", "aria-label": "Button type" });
+  function drawType() {
+    typeSeg.replaceChildren();
+    [["fixed", "Fixed"], ["points", "Price points"], ["deal", "Deal"]].forEach(function (t) {
+      typeSeg.appendChild(h("button", { class: d.type === t[0] ? "on" : "", "aria-pressed": d.type === t[0] ? "true" : "false", text: t[1], onclick: function () { d.type = t[0]; drawType(); drawBody(); } }));
+    });
+  }
+  function numInp(key, ph, mode) {
+    var i = h("input", { class: "field", type: "text", inputmode: mode, placeholder: ph, autocomplete: "off", value: d[key] });
+    i.addEventListener("input", function () { d[key] = i.value; });
+    return i;
+  }
+  function drawBody() {
+    var f = document.createDocumentFragment();
+    if (d.type === "fixed") f.appendChild(field("Price", numInp("price", "0.00", "decimal")));
+    else if (d.type === "deal") {
+      f.appendChild(h("div", { class: "mini" }, field("Quantity", numInp("qty", "e.g. 5", "numeric")), field("Total price", numInp("total", "0.00", "decimal"))));
+    } else {
+      f.appendChild(h("p", { class: "note", style: "margin-top:0", text: "Optional: add the prices you use often. New prices are remembered as you sell." }));
+      var chips = h("div", { class: "chips" });
+      d.prices.slice().sort(function (x, y) { return x - y; }).forEach(function (c) {
+        chips.appendChild(h("button", { class: "chip", "aria-label": "Remove " + money(c), text: money(c) + " ×", onclick: function () { d.prices = d.prices.filter(function (x) { return x !== c; }); drawBody(); } }));
+      });
+      f.appendChild(chips);
+      var pi = h("input", { class: "field", type: "text", inputmode: "decimal", placeholder: "Add a price", autocomplete: "off", "aria-label": "Add a price" });
+      function addP() {
+        var c = parseMoney(pi.value);
+        if (!c) return;
+        if (d.prices.indexOf(c) < 0 && d.prices.length < 8) d.prices.push(c);
+        drawBody();
+      }
+      pi.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addP(); } });
+      f.appendChild(h("div", { class: "mini" }, h("div", { class: "fld" }, pi), h("button", { class: "btn o", style: "width:auto;padding:12px 18px", text: "Add", onclick: addP })));
+    }
+    body.replaceChildren(f);
+  }
+  function fail(m) { err.textContent = m; err.hidden = false; }
+  sv.appendChild(backBar(isNew ? "New button" : "Edit button", function () { go(state.buttons.length && !isNew ? "buttons" : "main", {}); }));
+  sv.appendChild(field("Name", nameInp));
+  sv.appendChild(typeSeg); sv.appendChild(body); sv.appendChild(err);
+  sv.appendChild(h("button", { class: "btn", text: "Save", onclick: function () {
+    var name = d.name.trim().slice(0, 30);
+    if (!name) return fail("Enter a name.");
+    var out = { name: name, type: d.type, price: 0, prices: [], qty: 1, total: 0 };
+    if (d.type === "fixed") { out.price = parseMoney(d.price); if (!out.price) return fail("Enter a price above $0."); }
+    else if (d.type === "deal") {
+      out.qty = /^\d{1,4}$/.test(d.qty.trim()) ? parseInt(d.qty, 10) : 0;
+      out.total = parseMoney(d.total);
+      if (out.qty < 2) return fail("Quantity must be 2 or more."); if (!out.total) return fail("Enter the total price.");
+    } else out.prices = d.prices.slice();
+    if (isNew) { out.id = uid(); state.buttons.push(out); } else { out.id = b.id; state.buttons[state.buttons.indexOf(b)] = out; }
+    save(); go(state.buttons.length > 1 ? "buttons" : "main", {});
+  } }));
+  if (!isNew) sv.appendChild(h("button", { class: "btn del", style: "margin-top:8px", text: "Delete button", onclick: function () {
+    if (!confirm("Delete this button? Past sales stay in the log.")) return;
+    state.buttons = state.buttons.filter(function (x) { return x !== b; }); save(); go(state.buttons.length ? "buttons" : "main", {});
+  } }));
+  drawType(); drawBody();
+}
+
+/* edit a sale */
+function viewEdit() {
+  var s = ui.sale;
+  var d = { name: s.name, qty: String(s.qty), price: (s.amount / s.qty / 100).toFixed(2), method: s.method, time: hhmm(s.ts) };
+  var orig = { qty: d.qty, price: d.price };
+  var err = h("p", { class: "err", hidden: true });
+  function fail(m) { err.textContent = m; err.hidden = false; }
+  function inp(key, type, mode, max) {
+    var i = h("input", { class: "field", type: type, inputmode: mode, maxlength: max, autocomplete: "off", value: d[key] });
+    i.addEventListener("input", function () { d[key] = i.value; });
+    return i;
+  }
+  var segHost = h("div");
+  function drawSeg() {
+    var list = methods(); if (list.indexOf(d.method) < 0) list.push(d.method);
+    if (list.length > 1) segHost.replaceChildren(methodSeg(d.method, list, function (m) { d.method = m; drawSeg(); }));
+  }
+  sv.appendChild(backBar("Edit sale", function () { go("main", {}); }));
+  sv.appendChild(field("Name", inp("name", "text", "text", "30")));
+  sv.appendChild(h("div", { class: "mini" }, field("Qty", inp("qty", "text", "numeric", "4")), field("Price each", inp("price", "text", "decimal", "10"))));
+  sv.appendChild(segHost);
+  sv.appendChild(field("Time", inp("time", "time")));
+  sv.appendChild(err);
+  sv.appendChild(h("div", { class: "row2" },
+    h("button", { class: "btn del", text: "Delete", onclick: function () {
+      if (!confirm("Delete this sale?")) return;
+      state.sales = state.sales.filter(function (x) { return x.id !== s.id; }); save(); go("main", {});
+    } }),
+    h("button", { class: "btn big", text: "Save", onclick: function () {
+      var q = /^\d{1,4}$/.test(d.qty.trim()) ? parseInt(d.qty, 10) : 0;
+      if (q < 1) return fail("Quantity must be 1 or more.");
+      var amount;
+      if (d.qty.trim() === orig.qty && d.price.trim() === orig.price) amount = s.amount;
+      else { var pc = parseMoney(d.price); if (pc === null || pc <= 0) return fail("Enter a price above $0."); amount = Math.round(q * pc); }
+      var name = d.name.trim().slice(0, 30), unnamed = !name || name.toLowerCase() === "other";
+      var ts = s.ts;
+      if (/^\d{2}:\d{2}$/.test(d.time) && d.time !== hhmm(s.ts)) {
+        var p = s.date.split("-"), t = d.time.split(":");
+        ts = new Date(+p[0], +p[1] - 1, +p[2], +t[0], +t[1]).getTime();
+      }
+      s.name = name || "Other"; s.qty = q; s.amount = amount; s.method = d.method; s.ts = ts; s.check = unnamed;
+      save(); go("main", {});
+    } })));
+  drawSeg();
+}
+
+/* ---------- settings ---------- */
+var st = document.getElementById("v-settings");
+function renderSettings() {
+  function row(name, sub, on, fn) {
+    var t = h("button", { class: "tgl", role: "switch", "aria-checked": on ? "true" : "false", "aria-label": name, onclick: fn }, h("i"));
+    if (on === null) t = h("span", { class: "chip", text: "Always on" });
+    return h("div", { class: "pm" }, h("span", { class: "n" }, name, sub ? h("div", { class: "s", text: sub }) : null), t);
+  }
+  var fee = h("input", { class: "field", type: "text", inputmode: "decimal", maxlength: "5", placeholder: "e.g. 1.5", autocomplete: "off", "aria-label": "EFTPOS fee percent", value: state.settings.fee });
+  fee.addEventListener("input", function () { state.settings.fee = fee.value; save(); });
+  st.replaceChildren(
+    h("div", { class: "head" }, h("b", { text: "Settings" }), h("button", { class: "link", text: "Done", onclick: closeSettings })),
+    h("div", { class: "sec" }, h("span", { text: "How customers pay you" })),
+    h("div", { class: "card list" },
+      row("Cash", null, null),
+      row("EFTPOS", "Card terminal", state.settings.eftpos, function () { state.settings.eftpos = !state.settings.eftpos; save(); renderSettings(); }),
+      row("Bank transfer", "Customer pays to your account", state.settings.bank, function () { state.settings.bank = !state.settings.bank; save(); renderSettings(); })),
+    h("p", { class: "note", text: "Only the methods you turn on appear when logging a sale." }),
+    h("div", { class: "sec" }, h("span", { text: "EFTPOS fee" })),
+    field("Fee % (used in cash-up)", fee),
+    dataSection(),
+    h("p", { class: "note", text: "Free, no accounts. Add to your home screen to use it offline." }));
+}
+var prevTab = "ck";
+function showView(v) {
+  ["ck", "sales", "cash", "settings"].forEach(function (x) { document.getElementById("v-" + x).hidden = x !== v; });
+  window.scrollTo(0, 0);
+}
+function closeSettings() { showView(prevTab); if (prevTab === "sales") renderSales(); }
+document.getElementById("gear").addEventListener("click", function () {
+  clearToast(); renderSettings(); showView("settings");
+});
+renderSales();
+
+/* ---------- backup, restore, CSV, storage ---------- */
+function ymd(iso) { return String(iso || "").replace(/-/g, ""); }
+function snapshot() {
+  return { v: 1, header: state.header, items: state.items, settings: state.settings, buttons: state.buttons, sales: state.sales, locked: state.locked, lastMethod: state.lastMethod, cash: state.cash };
+}
+function deliver(name, text, type) {
+  var blob = new Blob([text], { type: type });
+  try {
+    var file = new File([blob], name, { type: type });
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && /iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      return navigator.share({ files: [file], title: name }).then(function () { return true; }, function (e) { return e && e.name === "AbortError" ? false : download(); });
+    }
+  } catch (e) { /* fall through to download */ }
+  return Promise.resolve(download());
+  function download() {
+    var a = h("a", { href: URL.createObjectURL(blob), download: name });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    return true;
+  }
+}
+function lastBackup() { try { return localStorage.getItem("stalltrack.backup") || ""; } catch (e) { return ""; } }
+function doBackup() {
+  var text = JSON.stringify({ app: "stalltrack", version: 1, exported: new Date().toISOString(), data: snapshot() });
+  return deliver("stalltrack-backup-" + ymd(todayISO()) + ".json", text, "application/json").then(function (ok) {
+    if (ok) { try { localStorage.setItem("stalltrack.backup", todayISO()); } catch (e) { /* ignore */ } }
+    return ok;
+  });
+}
+function restoreFrom(file, done) {
+  var r = new FileReader();
+  r.onerror = function () { done("Could not read that file."); };
+  r.onload = function () {
+    var obj;
+    try { obj = JSON.parse(String(r.result)); } catch (e) { return done("That is not a stalltrack backup (invalid file)."); }
+    if (!obj || obj.app !== "stalltrack" || !obj.data || typeof obj.data !== "object") return done("That is not a stalltrack backup.");
+    if (!confirm("Restore this backup? It replaces everything currently on this device.")) return done("");
+    try { localStorage.setItem(KEY, JSON.stringify(obj.data)); } catch (e) { return done("Could not save on this device."); }
+    location.reload();
+  };
+  r.readAsText(file);
+}
+function csvCell(v) {
+  v = String(v == null ? "" : v);
+  if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; // stop spreadsheet formula injection from item names
+  return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+function csv(rows) { return "﻿" + rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n") + "\r\n"; }
+function dollars(c) { return (c / 100).toFixed(2); }
+function exportSalesCSV() {
+  var rows = [["date", "time", "item", "qty", "amount_nzd", "method", "to_check"]];
+  state.sales.slice().sort(function (a, b) { return a.ts - b.ts; }).forEach(function (s) {
+    rows.push([ymd(s.date), hhmm(s.ts), s.name, s.qty, dollars(s.amount), METHOD_NAMES[s.method], s.check ? "yes" : ""]);
+  });
+  return deliver("stalltrack-sales-" + ymd(todayISO()) + ".csv", csv(rows), "text/csv");
+}
+function exportCashCSV() {
+  var rows = [["date", "float", "cash_sales", "eftpos_sales", "bank_sales", "total_sales", "business_expenses", "personal_spend", "eftpos_fee_est", "cash_paid_from_tin", "expected_tin", "counted_tin", "variance", "net_profit", "saved"]];
+  var dates = {}; Object.keys(state.cash).forEach(function (d) { dates[d] = 1; });
+  Object.keys(dates).sort().forEach(function (d) {
+    var c = state.cash[d], T = totalsFor(d);
+    rows.push([ymd(d), dollars(T.float), dollars(T.cash), dollars(T.eftpos), dollars(T.bank), dollars(T.all), dollars(T.biz), dollars(T.personal), dollars(T.fee), dollars(T.tinOut), dollars(T.expected),
+      c.counted == null ? "" : dollars(c.counted), T.variance == null ? "" : dollars(T.variance), dollars(T.profit), c.saved ? "yes" : "no"]);
+  });
+  return deliver("stalltrack-cashups-" + ymd(todayISO()) + ".csv", csv(rows), "text/csv");
+}
+function askPersist(cb) {
+  try {
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(function (ok) { if (cb) cb(ok); }, function () { if (cb) cb(false); });
+    else if (cb) cb(null);
+  } catch (e) { if (cb) cb(null); }
+}
+function dataSection() {
+  var status = h("p", { class: "note", style: "margin-top:4px", text: "" });
+  function setStatus(m) { status.textContent = m; }
+  function backupBtn(cls) { return h("button", { class: cls, text: "Back up now", onclick: function () { doBackup().then(function (ok) { if (ok) renderSettings(); }); } }); }
+  var lb = lastBackup();
+  var file = h("input", { type: "file", accept: "application/json,.json", hidden: true, "aria-label": "Restore backup file" });
+  file.addEventListener("change", function () { if (file.files[0]) restoreFrom(file.files[0], setStatus); file.value = ""; });
+  var persist = h("p", { class: "note", style: "margin-top:4px", text: "" });
+  try { if (navigator.storage && navigator.storage.persisted) navigator.storage.persisted().then(function (p) { persist.textContent = p ? "Storage: protected from automatic clearing." : "Storage: not protected. A backup is your only safety net."; }); } catch (e) { /* ignore */ }
+  return h("div", null,
+    h("div", { class: "sec" }, h("span", { text: "Your data" })),
+    h("div", { class: "card" },
+      h("p", { class: "note", style: "margin:0 0 10px", text: "Everything stays on this device. " + (lb ? "Last backup: " + niceDate(lb) + "." : "No backup yet.") }),
+      backupBtn("btn"),
+      h("button", { class: "btn o", style: "margin-top:8px", text: "Restore from backup", onclick: function () { file.click(); } }), file,
+      h("div", { class: "row2", style: "margin-top:8px" },
+        h("button", { class: "btn o", text: "Sales CSV", onclick: exportSalesCSV }),
+        h("button", { class: "btn o", text: "Cash-ups CSV", onclick: exportCashCSV })),
+      status, persist));
+}
+
+/* ---------- cash-up ---------- */
+var cv = document.getElementById("v-cash");
+var cui = { step: 1, draftExp: { label: "", amount: "", kind: "business", tin: true } };
+var SUGGEST = ["Stall fee", "Parking", "Food & drink", "Petrol", "Supplies"];
+function cashToday() {
+  var t = todayISO();
+  if (!state.cash[t]) state.cash[t] = { float: null, exp: [], counted: null, eftpos: null, bank: null, fee: null, saved: false };
+  return state.cash[t];
+}
+function reopenToday() {
+  var t = todayISO(); delete state.locked[t];
+  if (state.cash[t]) state.cash[t].saved = false;
+  save(); renderSales(); renderCash();
+}
+function totals() { return totalsFor(todayISO()); }
+function totalsFor(t) {
+  var c = state.cash[t] || { float: null, exp: [], counted: null, fee: null }, r = { cash: 0, eftpos: 0, bank: 0, all: 0, n: 0 };
+  state.sales.forEach(function (s) { if (s.date === t) { r[s.method] += s.amount; r.all += s.amount; r.n++; } });
+  var fee = parseFloat(c.fee != null ? c.fee : state.settings.fee);
+  r.fee = isFinite(fee) && fee > 0 ? Math.round(r.eftpos * fee / 100) : 0;
+  r.biz = 0; r.personal = 0; r.tinOut = 0;
+  c.exp.forEach(function (e) {
+    if (e.kind === "personal") r.personal += e.amount; else r.biz += e.amount;
+    if (e.tin) r.tinOut += e.amount;
+  });
+  r.float = c.float || 0;
+  r.expected = r.float + r.cash - r.tinOut;
+  r.profit = r.all - r.biz - r.fee;
+  r.variance = c.counted == null ? null : c.counted - r.expected;
+  return r;
+}
+function moneyField(label, cents, onChange, ph) {
+  var i = h("input", { class: "field", type: "text", inputmode: "decimal", placeholder: ph || "0.00", autocomplete: "off", "aria-label": label, value: cents == null ? "" : (cents / 100).toFixed(2) });
+  i.addEventListener("input", function () { var v = i.value.trim(); onChange(v === "" ? null : parseMoney(v)); });
+  return h("div", { class: "fld" }, h("label", { class: "lbl", text: label }), i);
+}
+function line(label, val, o) {
+  o = o || {};
+  return h("div", { class: "srow", style: "min-height:44px;" + (o.bold ? "font-weight:700" : "") },
+    h("span", { class: "nm", style: o.bold ? "" : "font-weight:500" }, label, o.flag ? h("span", { class: "flag", text: "● " + o.flag }) : null),
+    h("span", { class: "am", style: "min-width:90px", text: val }));
+}
+function stepBar() {
+  var bar = h("div", { class: "seg", role: "group", "aria-label": "Cash-up step" });
+  ["Before", "Pack-down", "Result"].forEach(function (n, i) {
+    bar.appendChild(h("button", { class: cui.step === i + 1 ? "on" : "", "aria-pressed": cui.step === i + 1 ? "true" : "false", text: n, onclick: function () { cui.step = i + 1; renderCash(); window.scrollTo(0, 0); } }));
+  });
+  return bar;
+}
+function renderCash() {
+  cv.replaceChildren();
+  var c = cashToday(), T = totals();
+  cv.appendChild(h("div", { class: "head" }, h("b", { text: "Cash-up" }), h("span", { class: "note", style: "margin:0", text: niceDate(todayISO()) })));
+  if (c.saved) { renderSaved(c, T); return; }
+  cv.appendChild(stepBar());
+  if (cui.step === 1) stepBefore(c); else if (cui.step === 2) stepPack(c, T); else stepResult(c, T);
+}
+
+function stepBefore(c) {
+  cv.appendChild(moneyField("Float in the tin at the start", c.float, function (v) { c.float = v; save(); }, "0.00"));
+  cv.appendChild(h("div", { class: "sec" }, h("span", { text: "Money going out" })));
+  if (c.exp.length) {
+    var card = h("div", { class: "card list" });
+    c.exp.forEach(function (e) {
+      card.appendChild(h("div", { class: "srow", style: "padding:6px 0" },
+        h("span", { class: "nm" }, e.label, h("div", { class: "s", style: "font-size:12px;color:var(--muted);font-weight:500", text: (e.kind === "personal" ? "Personal" : "Business") + (e.tin ? " · from tin" : " · not from tin") })),
+        h("span", { class: "am", text: money(e.amount) }),
+        h("button", { class: "x", "aria-label": "Remove " + e.label, text: "×", style: "width:44px;height:44px;border:none;background:none;font-size:22px;color:var(--delete)",
+          onclick: function () { c.exp = c.exp.filter(function (x) { return x.id !== e.id; }); save(); renderCash(); } })));
+    });
+    cv.appendChild(card);
+  }
+  var d = cui.draftExp;
+  var chips = h("div", { class: "chips", style: "margin-top:10px" });
+  SUGGEST.forEach(function (s) { chips.appendChild(h("button", { class: "chip", text: s, onclick: function () { d.label = s; if (s === "Food & drink") d.kind = "personal"; else d.kind = "business"; renderCash(); } })); });
+  var lab = h("input", { class: "field", type: "text", maxlength: "30", placeholder: "What for?", autocomplete: "off", "aria-label": "Expense label", value: d.label });
+  lab.addEventListener("input", function () { d.label = lab.value; });
+  var amt = h("input", { class: "field", type: "text", inputmode: "decimal", placeholder: "0.00", autocomplete: "off", "aria-label": "Expense amount", value: d.amount });
+  amt.addEventListener("input", function () { d.amount = amt.value; });
+  var kind = h("div", { class: "seg", role: "group", "aria-label": "Expense type" });
+  [["business", "Business"], ["personal", "Personal"]].forEach(function (k) {
+    kind.appendChild(h("button", { class: d.kind === k[0] ? "on" : "", "aria-pressed": d.kind === k[0] ? "true" : "false", text: k[1], onclick: function () { d.kind = k[0]; renderCash(); } }));
+  });
+  var tin = h("div", { class: "pm", style: "border:none" }, h("span", { class: "n", text: "Paid from the tin" }),
+    h("button", { class: "tgl", role: "switch", "aria-checked": d.tin ? "true" : "false", "aria-label": "Paid from the tin", onclick: function () { d.tin = !d.tin; renderCash(); } }, h("i")));
+  var err = h("p", { class: "err", hidden: true });
+  var addb = h("button", { class: "btn o", text: "Add expense", onclick: function () {
+    var a = parseMoney(d.amount), l = d.label.trim().slice(0, 30);
+    if (!l) { err.textContent = "Enter what it was for."; err.hidden = false; return; }
+    if (!a) { err.textContent = "Enter an amount above $0."; err.hidden = false; return; }
+    c.exp.push({ id: uid(), label: l, amount: a, kind: d.kind, tin: d.tin });
+    cui.draftExp = { label: "", amount: "", kind: "business", tin: true }; save(); renderCash();
+  } });
+  cv.appendChild(h("div", { class: "card", style: "margin-top:8px" }, h("p", { class: "note", style: "margin:0 0 4px", text: "Quick picks" }), chips,
+    h("div", { class: "mini", style: "margin-top:10px" }, h("div", { class: "fld" }, lab), h("div", { class: "fld", style: "max-width:110px" }, amt)), kind, tin, err, addb));
+  cv.appendChild(h("button", { class: "btn", style: "margin-top:12px", text: "Next: pack-down", onclick: function () { cui.step = 2; renderCash(); window.scrollTo(0, 0); } }));
+}
+
+function checkLine(label, counted, logged) {
+  var diff = counted - logged;
+  return line(label, money(counted), diff === 0 ? null : { flag: "check" });
+}
+function stepPack(c, T) {
+  cv.appendChild(moneyField("Cash counted in the tin", c.counted, function (v) { c.counted = v; save(); }));
+  if (state.settings.eftpos) {
+    cv.appendChild(moneyField("EFTPOS terminal total", c.eftpos, function (v) { c.eftpos = v; save(); }));
+    var fee = h("input", { class: "field", type: "text", inputmode: "decimal", maxlength: "5", placeholder: "e.g. 1.5", autocomplete: "off", "aria-label": "EFTPOS fee percent", value: c.fee != null ? c.fee : state.settings.fee });
+    fee.addEventListener("input", function () { c.fee = fee.value; save(); });
+    cv.appendChild(h("div", { class: "fld" }, h("label", { class: "lbl", text: "EFTPOS fee %" }), fee));
+  }
+  if (state.settings.bank) cv.appendChild(moneyField("Bank transfers received", c.bank, function (v) { c.bank = v; save(); }));
+  cv.appendChild(h("p", { class: "note", text: "Terminal and bank totals are compared with your logged sales on the result page." }));
+  cv.appendChild(h("div", { class: "row2" },
+    h("button", { class: "btn o", text: "Back", onclick: function () { cui.step = 1; renderCash(); } }),
+    h("button", { class: "btn big", text: "See result", onclick: function () { cui.step = 3; renderCash(); window.scrollTo(0, 0); } })));
+}
+
+function resultCards(c, T) {
+  var f = document.createDocumentFragment();
+  var v = T.variance;
+  var vtxt = v == null ? "Enter the counted tin" : v === 0 ? "Matches" : (v > 0 ? "Over " : "Short ") + money(Math.abs(v));
+  f.appendChild(h("div", { class: "total", style: "flex-direction:column;align-items:stretch;gap:2px" },
+    h("span", { style: "text-align:left", text: "Net profit" }), h("b", { text: money(T.profit) })));
+  f.appendChild(h("div", { class: "sec" }, h("span", { text: "Tin" })));
+  f.appendChild(h("div", { class: "card list" },
+    line("Float", money(T.float)), line("+ Cash sales", money(T.cash)), line("− Cash paid from tin", money(T.tinOut)),
+    line("Expected in tin", money(T.expected), { bold: true }),
+    line("Counted", c.counted == null ? "—" : money(c.counted)),
+    line("Variance", vtxt, { bold: true, flag: v ? (v > 0 ? "over" : "short") : null })));
+  f.appendChild(h("div", { class: "sec" }, h("span", { text: "Sales" })));
+  var sc = h("div", { class: "card list" }, line("Cash", money(T.cash)));
+  if (state.settings.eftpos || T.eftpos) {
+    var ec = c.eftpos == null ? null : c.eftpos - T.eftpos;
+    sc.appendChild(line("EFTPOS", money(T.eftpos), ec ? { flag: "check" } : null));
+    if (ec) sc.appendChild(line("Terminal says " + money(c.eftpos), money(ec), { flag: "difference" }));
+  }
+  if (state.settings.bank || T.bank) {
+    var bc = c.bank == null ? null : c.bank - T.bank;
+    sc.appendChild(line("Bank transfer", money(T.bank), bc ? { flag: "check" } : null));
+    if (bc) sc.appendChild(line("Bank says " + money(c.bank), money(bc), { flag: "difference" }));
+  }
+  sc.appendChild(line("Total sales", money(T.all), { bold: true }));
+  f.appendChild(sc);
+  f.appendChild(h("div", { class: "sec" }, h("span", { text: "Profit" })));
+  var pc = h("div", { class: "card list" }, line("Total sales", money(T.all)), line("− Business expenses", money(T.biz)));
+  if (T.fee) pc.appendChild(line("− EFTPOS fee (est.)", money(T.fee)));
+  pc.appendChild(line("Net profit", money(T.profit), { bold: true }));
+  f.appendChild(pc);
+  f.appendChild(h("p", { class: "note", text: "Personal spending: " + money(T.personal) + ". Shown separately, not in profit. Stalltrack gives no tax advice." }));
+  return f;
+}
+function stepResult(c, T) {
+  cv.appendChild(resultCards(c, T));
+  var unnamed = state.sales.filter(function (s) { return s.date === todayISO() && s.check; }).length;
+  if (unnamed) cv.appendChild(h("p", { class: "err", text: "● " + unnamed + " sale" + (unnamed === 1 ? "" : "s") + " still to check in the Sales tab." }));
+  cv.appendChild(h("div", { class: "row2" },
+    h("button", { class: "btn o", text: "Back", onclick: function () { cui.step = 2; renderCash(); } }),
+    h("button", { class: "btn big", text: "Save cash-up", disabled: c.counted == null, onclick: function () {
+      if (!confirm("Save this cash-up? Sales for today will be locked until you reopen.")) return;
+      c.saved = true; state.locked[todayISO()] = true; save(); askPersist(); renderCash(); renderSales(); window.scrollTo(0, 0);
+    } })));
+}
+function renderSaved(c, T) {
+  cv.appendChild(h("div", { class: "lockbar" }, h("div", null, h("b", { text: "Cash-up saved" }), h("span", { text: "Sales are locked." })),
+    h("button", { class: "btn", text: "Reopen", onclick: reopenToday })));
+  var lb = lastBackup();
+  if (lb !== todayISO()) {
+    cv.appendChild(h("div", { class: "card", style: "margin-bottom:8px" }, h("b", { text: "Back up your data" }),
+      h("p", { class: "note", style: "margin:4px 0 10px", text: "Your records only live on this device. Save a backup now." }),
+      h("button", { class: "btn", text: "Back up now", onclick: function () { doBackup().then(function () { renderCash(); }); } })));
+  }
+  cv.appendChild(resultCards(c, T));
+}
+renderCash();
+
+/* ---------- tabs ---------- */
+document.getElementById("tabs").addEventListener("click", function (e) {
+  var b = e.target.closest("button"); if (!b) return;
+  Array.prototype.forEach.call(this.children, function (x) {
+    var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  prevTab = b.dataset.v;
+  clearToast();
+  if (b.dataset.v === "sales") { ui.mode = "main"; renderSales(); }
+  if (b.dataset.v === "cash") renderCash();
+  showView(b.dataset.v);
+});
+
+/* ---------- offline: service worker + persistent storage ---------- */
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener("load", function () { try { navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) { /* ignore */ } });
+}
+if (state.sales.length || state.items.length) askPersist();
+
+/* ---------- splash: about 1 second, tap to skip ---------- */
+(function () {
+  var s = document.getElementById("splash"), gone = false;
+  function hide() { if (gone) return; gone = true; s.classList.add("out"); setTimeout(function () { s.hidden = true; }, 300); }
+  s.addEventListener("click", hide);
+  setTimeout(hide, 1000);
+})();
 </script>
 </body>
 </html>

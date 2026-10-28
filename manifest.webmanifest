@@ -1,0 +1,17 @@
+{
+  "name": "stalltrack",
+  "short_name": "stalltrack",
+  "description": "Free pre-market checklist, sales log and cash-up for market stallholders. From oat.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F4F1",
+  "theme_color": "#F6F4F1",
+  "lang": "en-NZ",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
